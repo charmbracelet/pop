@@ -1,0 +1,282 @@
+package main
+
+import (
+	"os"
+	"strings"
+
+	"github.com/charmbracelet/bubbles/filepicker"
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/textarea"
+	"github.com/charmbracelet/bubbles/textinput"
+	tea "github.com/charmbracelet/bubbletea"
+)
+
+type State int
+
+const (
+	editingFrom State = iota
+	editingTo
+	editingSubject
+	editingBody
+	editingAttachments
+	pickingFile
+	sendingEmail
+)
+
+type Model struct {
+	// state represents the current state of the application.
+	state State
+
+	// From represents the sender's email address.
+	From textinput.Model
+	// To represents the recipient's email address.
+	// This can be a comma-separated list of addresses.
+	To textinput.Model
+	// Subject represents the email's subject.
+	Subject textinput.Model
+	// Body represents the email's body.
+	// This can be written in markdown and will be converted to HTML.
+	Body textarea.Model
+	// Attachments represents the email's attachments.
+	// This is a list of file paths which are picked with a filepicker.
+	Attachments list.Model
+
+	// filepicker is used to pick file attachments.
+	filepicker filepicker.Model
+	help       help.Model
+	keymap     KeyMap
+	quitting   bool
+}
+
+func NewModel() Model {
+	from := textinput.New()
+	from.Prompt = "From "
+	from.Placeholder = "me@example.com"
+	from.PromptStyle = labelStyle.Copy()
+	from.PromptStyle = activeLabelStyle
+	from.TextStyle = activeTextStyle
+	from.Cursor.Style = cursorStyle
+	from.PlaceholderStyle = placeholderStyle
+	from.Focus()
+
+	to := textinput.New()
+	to.Prompt = "To "
+	to.PromptStyle = labelStyle.Copy()
+	to.Cursor.Style = cursorStyle
+	to.PlaceholderStyle = placeholderStyle
+	to.Placeholder = "you@example.com"
+
+	subject := textinput.New()
+	subject.Prompt = "Subject "
+	subject.PromptStyle = labelStyle.Copy()
+	subject.Cursor.Style = cursorStyle
+	subject.PlaceholderStyle = placeholderStyle
+	subject.Placeholder = "Hello!"
+
+	body := textarea.New()
+	body.Placeholder = "# Hi"
+	body.ShowLineNumbers = false
+	body.FocusedStyle.CursorLine = activeTextStyle
+	body.FocusedStyle.Prompt = activeLabelStyle
+	body.FocusedStyle.Text = activeTextStyle
+	body.FocusedStyle.Placeholder = placeholderStyle
+	body.BlurredStyle.CursorLine = textStyle
+	body.BlurredStyle.Prompt = labelStyle
+	body.BlurredStyle.Text = textStyle
+	body.BlurredStyle.Placeholder = placeholderStyle
+	body.Cursor.Style = cursorStyle
+	body.Blur()
+
+	attachments := list.New([]list.Item{}, attachmentDelegate{}, 0, 3)
+	attachments.DisableQuitKeybindings()
+	attachments.SetShowTitle(true)
+	attachments.Title = "Attachments"
+	attachments.Styles.Title = labelStyle
+	attachments.Styles.TitleBar = labelStyle
+	attachments.SetShowHelp(false)
+	attachments.SetShowStatusBar(false)
+	attachments.SetStatusBarItemName("attachment", "attachments")
+	attachments.SetShowPagination(false)
+
+	picker := filepicker.New()
+	picker.CurrentDirectory, _ = os.UserHomeDir()
+
+	return Model{
+		state:       editingFrom,
+		From:        from,
+		To:          to,
+		Subject:     subject,
+		Body:        body,
+		Attachments: attachments,
+		filepicker:  picker,
+		help:        help.New(),
+		keymap:      DefaultKeybinds(),
+	}
+}
+
+func (m Model) Init() tea.Cmd {
+	return tea.Batch(
+		m.From.Cursor.BlinkCmd(),
+		m.filepicker.Init(),
+	)
+}
+
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.From.Width = msg.Width - 2
+		m.To.Width = msg.Width - 2
+		m.Subject.Width = msg.Width - 2
+		m.Body.SetWidth(msg.Width - 2)
+		m.Attachments.SetWidth(msg.Width - 2)
+
+	case tea.KeyMsg:
+		switch {
+		case key.Matches(msg, m.keymap.NextInput):
+			m.blurInputs()
+			switch m.state {
+			case editingFrom:
+				m.state = editingTo
+				m.To.Focus()
+			case editingTo:
+				m.state = editingSubject
+			case editingSubject:
+				m.state = editingBody
+			case editingBody:
+				m.state = editingAttachments
+			case editingAttachments:
+				m.state = editingFrom
+			}
+			m.focusActiveInput()
+
+		case key.Matches(msg, m.keymap.PrevInput):
+			m.blurInputs()
+			switch m.state {
+			case editingFrom:
+				m.state = editingAttachments
+			case editingTo:
+				m.state = editingFrom
+			case editingSubject:
+				m.state = editingTo
+			case editingBody:
+				m.state = editingSubject
+			case editingAttachments:
+				m.state = editingBody
+			}
+			m.focusActiveInput()
+
+		case key.Matches(msg, m.keymap.Send):
+		case key.Matches(msg, m.keymap.Attach):
+			m.state = pickingFile
+		case key.Matches(msg, m.keymap.Unattach):
+			m.Attachments.RemoveItem(m.Attachments.Index())
+			m.Attachments.SetHeight(max(len(m.Attachments.Items()), 1) + 2)
+		case key.Matches(msg, m.keymap.Quit):
+			m.quitting = true
+			return m, tea.Quit
+		}
+	}
+
+	m.updateKeymap()
+
+	var cmds []tea.Cmd
+	var cmd tea.Cmd
+	m.From, cmd = m.From.Update(msg)
+	cmds = append(cmds, cmd)
+	m.To, cmd = m.To.Update(msg)
+	cmds = append(cmds, cmd)
+	m.Subject, cmd = m.Subject.Update(msg)
+	cmds = append(cmds, cmd)
+	m.Body, cmd = m.Body.Update(msg)
+	cmds = append(cmds, cmd)
+	m.filepicker, cmd = m.filepicker.Update(msg)
+	cmds = append(cmds, cmd)
+
+	if m.state == pickingFile {
+		if didSelect, path := m.filepicker.DidSelectFile(msg); didSelect {
+			m.Attachments.InsertItem(0, attachment(path))
+			m.Attachments.SetHeight(len(m.Attachments.Items()) + 2)
+			m.state = editingAttachments
+			m.updateKeymap()
+		}
+	}
+
+	if m.state == editingAttachments {
+		m.Attachments, cmd = m.Attachments.Update(msg)
+		cmds = append(cmds, cmd)
+	}
+	m.help, cmd = m.help.Update(msg)
+	cmds = append(cmds, cmd)
+
+	return m, tea.Batch(cmds...)
+}
+
+func (m *Model) blurInputs() {
+	m.From.Blur()
+	m.To.Blur()
+	m.Subject.Blur()
+	m.Body.Blur()
+	m.From.PromptStyle = labelStyle
+	m.To.PromptStyle = labelStyle
+	m.Subject.PromptStyle = labelStyle
+	m.From.TextStyle = textStyle
+	m.To.TextStyle = textStyle
+	m.Subject.TextStyle = textStyle
+	m.Attachments.Styles.Title = labelStyle
+	m.Attachments.SetDelegate(attachmentDelegate{false})
+}
+
+func (m *Model) focusActiveInput() {
+	switch m.state {
+	case editingFrom:
+		m.From.PromptStyle = activeLabelStyle
+		m.From.TextStyle = activeTextStyle
+		m.From.Focus()
+		m.From.CursorEnd()
+	case editingTo:
+		m.To.PromptStyle = activeLabelStyle
+		m.To.TextStyle = activeTextStyle
+		m.To.Focus()
+		m.To.CursorEnd()
+	case editingSubject:
+		m.Subject.PromptStyle = activeLabelStyle
+		m.Subject.TextStyle = activeTextStyle
+		m.Subject.Focus()
+		m.Subject.CursorEnd()
+	case editingBody:
+		m.Body.Focus()
+		m.Body.CursorEnd()
+	case editingAttachments:
+		m.Attachments.Styles.Title = activeLabelStyle
+		m.Attachments.SetDelegate(attachmentDelegate{true})
+	}
+}
+
+func (m Model) View() string {
+	if m.quitting {
+		return ""
+	}
+
+	if m.state == pickingFile {
+		return "\n" + activeLabelStyle.Render("Attachments") +
+			"\n\n" + m.filepicker.View()
+	}
+
+	var s strings.Builder
+
+	s.WriteString(m.From.View())
+	s.WriteString("\n")
+	s.WriteString(m.To.View())
+	s.WriteString("\n")
+	s.WriteString(m.Subject.View())
+	s.WriteString("\n\n")
+	s.WriteString(m.Body.View())
+	s.WriteString("\n\n")
+	s.WriteString(m.Attachments.View())
+	s.WriteString("\n")
+	s.WriteString(m.help.View(m.keymap))
+
+	return s.String()
+}
