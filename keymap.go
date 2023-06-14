@@ -15,11 +15,11 @@ type KeyMap struct {
 func DefaultKeybinds() KeyMap {
 	return KeyMap{
 		NextInput: key.NewBinding(
-			key.WithKeys("tab", "ctrl+n"),
+			key.WithKeys("tab"),
 			key.WithHelp("tab", "next"),
 		),
 		PrevInput: key.NewBinding(
-			key.WithKeys("shift+tab", "ctrl+p"),
+			key.WithKeys("shift+tab"),
 		),
 		Send: key.NewBinding(
 			key.WithKeys("ctrl+d", "enter"),

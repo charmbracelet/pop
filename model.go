@@ -8,9 +8,11 @@ import (
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"golang.org/x/exp/constraints"
 )
 
 type State int
@@ -44,10 +46,11 @@ type Model struct {
 	Attachments list.Model
 
 	// filepicker is used to pick file attachments.
-	filepicker filepicker.Model
-	help       help.Model
-	keymap     KeyMap
-	quitting   bool
+	filepicker     filepicker.Model
+	loadingSpinner spinner.Model
+	help           help.Model
+	keymap         KeyMap
+	quitting       bool
 }
 
 func NewModel() Model {
@@ -76,7 +79,7 @@ func NewModel() Model {
 	subject.Placeholder = "Hello!"
 
 	body := textarea.New()
-	body.Placeholder = "# Hi"
+	body.Placeholder = "# Email"
 	body.ShowLineNumbers = false
 	body.FocusedStyle.CursorLine = activeTextStyle
 	body.FocusedStyle.Prompt = activeLabelStyle
@@ -103,16 +106,20 @@ func NewModel() Model {
 	picker := filepicker.New()
 	picker.CurrentDirectory, _ = os.UserHomeDir()
 
+	loadingSpinner := spinner.NewModel()
+	loadingSpinner.Spinner = spinner.Dot
+
 	return Model{
-		state:       editingFrom,
-		From:        from,
-		To:          to,
-		Subject:     subject,
-		Body:        body,
-		Attachments: attachments,
-		filepicker:  picker,
-		help:        help.New(),
-		keymap:      DefaultKeybinds(),
+		state:          editingFrom,
+		From:           from,
+		To:             to,
+		Subject:        subject,
+		Body:           body,
+		Attachments:    attachments,
+		filepicker:     picker,
+		help:           help.New(),
+		keymap:         DefaultKeybinds(),
+		loadingSpinner: loadingSpinner,
 	}
 }
 
@@ -168,6 +175,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.focusActiveInput()
 
 		case key.Matches(msg, m.keymap.Send):
+			m.state = sendingEmail
+			return m, tea.Batch(
+				m.loadingSpinner.Tick,
+			)
 		case key.Matches(msg, m.keymap.Attach):
 			m.state = pickingFile
 		case key.Matches(msg, m.keymap.Unattach):
@@ -194,19 +205,22 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.filepicker, cmd = m.filepicker.Update(msg)
 	cmds = append(cmds, cmd)
 
-	if m.state == pickingFile {
+	switch m.state {
+	case pickingFile:
 		if didSelect, path := m.filepicker.DidSelectFile(msg); didSelect {
 			m.Attachments.InsertItem(0, attachment(path))
 			m.Attachments.SetHeight(len(m.Attachments.Items()) + 2)
 			m.state = editingAttachments
 			m.updateKeymap()
 		}
-	}
-
-	if m.state == editingAttachments {
+	case editingAttachments:
 		m.Attachments, cmd = m.Attachments.Update(msg)
 		cmds = append(cmds, cmd)
+	case sendingEmail:
+		m.loadingSpinner, cmd = m.loadingSpinner.Update(msg)
+		cmds = append(cmds, cmd)
 	}
+
 	m.help, cmd = m.help.Update(msg)
 	cmds = append(cmds, cmd)
 
@@ -259,9 +273,12 @@ func (m Model) View() string {
 		return ""
 	}
 
-	if m.state == pickingFile {
+	switch m.state {
+	case pickingFile:
 		return "\n" + activeLabelStyle.Render("Attachments") +
 			"\n\n" + m.filepicker.View()
+	case sendingEmail:
+		return "\n " + m.loadingSpinner.View() + "Sending email"
 	}
 
 	var s strings.Builder
@@ -278,5 +295,12 @@ func (m Model) View() string {
 	s.WriteString("\n")
 	s.WriteString(m.help.View(m.keymap))
 
-	return s.String()
+	return paddedStyle.Render(s.String())
+}
+
+func max[T constraints.Ordered](a, b T) T {
+	if a > b {
+		return a
+	}
+	return b
 }

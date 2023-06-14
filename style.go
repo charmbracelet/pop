@@ -17,4 +17,6 @@ var (
 
 	placeholderStyle = lipgloss.NewStyle().Foreground(darkGrayColor)
 	cursorStyle      = lipgloss.NewStyle().Foreground(whiteColor)
+
+	paddedStyle = lipgloss.NewStyle().Padding(1)
 )
