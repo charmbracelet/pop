@@ -62,6 +62,6 @@ func (k KeyMap) FullHelp() [][]key.Binding {
 func (m *Model) updateKeymap() {
 	m.keymap.Attach.SetEnabled(m.state == editingAttachments)
 	canSend := m.From.Value() != "" && m.To.Value() != "" && m.Subject.Value() != "" && m.Body.Value() != ""
-	m.keymap.Send.SetEnabled(canSend && m.state != editingBody)
+	m.keymap.Send.SetEnabled(canSend && m.state != editingBody && m.state != pickingFile)
 	m.keymap.Unattach.SetEnabled(m.state == editingAttachments && len(m.Attachments.Items()) > 0)
 }
