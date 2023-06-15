@@ -9,6 +9,7 @@ type KeyMap struct {
 	Send      key.Binding
 	Attach    key.Binding
 	Unattach  key.Binding
+	Back      key.Binding
 	Quit      key.Binding
 }
 
@@ -34,6 +35,11 @@ func DefaultKeybinds() KeyMap {
 		Unattach: key.NewBinding(
 			key.WithKeys("x"),
 			key.WithHelp("x", "remove"),
+			key.WithDisabled(),
+		),
+		Back: key.NewBinding(
+			key.WithKeys("esc"),
+			key.WithHelp("esc", "back"),
 			key.WithDisabled(),
 		),
 		Quit: key.NewBinding(
@@ -64,4 +70,5 @@ func (m *Model) updateKeymap() {
 	canSend := m.From.Value() != "" && m.To.Value() != "" && m.Subject.Value() != "" && m.Body.Value() != ""
 	m.keymap.Send.SetEnabled(canSend && m.state != editingBody && m.state != pickingFile)
 	m.keymap.Unattach.SetEnabled(m.state == editingAttachments && len(m.Attachments.Items()) > 0)
+	m.keymap.Back.SetEnabled(m.state == pickingFile)
 }

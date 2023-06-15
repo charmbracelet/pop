@@ -127,7 +127,6 @@ func NewModel() Model {
 func (m Model) Init() tea.Cmd {
 	return tea.Batch(
 		m.From.Cursor.BlinkCmd(),
-		m.filepicker.Init(),
 	)
 }
 
@@ -174,6 +173,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			m.focusActiveInput()
 
+		case key.Matches(msg, m.keymap.Back):
+			m.state = editingAttachments
+			m.updateKeymap()
+			return m, nil
 		case key.Matches(msg, m.keymap.Send):
 			m.state = sendingEmail
 			return m, tea.Batch(
@@ -182,6 +185,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			)
 		case key.Matches(msg, m.keymap.Attach):
 			m.state = pickingFile
+			return m, m.filepicker.Init()
 		case key.Matches(msg, m.keymap.Unattach):
 			m.Attachments.RemoveItem(m.Attachments.Index())
 			m.Attachments.SetHeight(max(len(m.Attachments.Items()), 1) + 2)
@@ -276,7 +280,7 @@ func (m Model) View() string {
 
 	switch m.state {
 	case pickingFile:
-		return "\n" + activeLabelStyle.Render("Attachments") +
+		return "\n" + activeLabelStyle.Render("Attachments") + " " + commentStyle.Render(m.filepicker.CurrentDirectory) +
 			"\n\n" + m.filepicker.View()
 	case sendingEmail:
 		return "\n " + m.loadingSpinner.View() + "Sending email"
