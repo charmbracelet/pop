@@ -26,11 +26,7 @@ func (m Model) sendEmailCmd() tea.Cmd {
 	return func() tea.Msg {
 		attachments := make([]string, len(m.Attachments.Items()))
 		for i, a := range m.Attachments.Items() {
-			at, ok := a.(attachment)
-			if !ok {
-				continue
-			}
-			attachments[i] = string(at)
+			attachments[i] = a.FilterValue()
 		}
 		err := sendEmail(strings.Split(m.To.Value(), TO_SEPARATOR), m.From.Value(), m.Subject.Value(), m.Body.Value(), attachments)
 		if err != nil {
