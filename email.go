@@ -47,16 +47,12 @@ func sendEmail(to []string, from, subject, body string, paths []string) error {
 
 	attachments := make([]resend.Attachment, len(paths))
 	for i, a := range paths {
-		abs, err := filepath.Abs(a)
-		if err != nil {
-			continue
-		}
-		content, err := os.ReadFile(abs)
+		f, err := os.ReadFile(a)
 		if err != nil {
 			continue
 		}
 		attachments[i] = resend.Attachment{
-			Content:  string(content),
+			Content:  string(f),
 			Filename: filepath.Base(a),
 		}
 	}
