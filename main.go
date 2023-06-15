@@ -58,7 +58,9 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 		mm := m.(Model)
-		fmt.Print(emailSummary(strings.Split(mm.To.Value(), TO_SEPARATOR), mm.Subject.Value()))
+		if !mm.abort {
+			fmt.Print(emailSummary(strings.Split(mm.To.Value(), TO_SEPARATOR), mm.Subject.Value()))
+		}
 		return nil
 	},
 }

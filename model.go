@@ -53,6 +53,7 @@ type Model struct {
 	help           help.Model
 	keymap         KeyMap
 	quitting       bool
+	abort          bool
 	err            error
 }
 
@@ -230,6 +231,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.Attachments.SetHeight(max(len(m.Attachments.Items()), 1) + 2)
 		case key.Matches(msg, m.keymap.Quit):
 			m.quitting = true
+			m.abort = true
 			return m, tea.Quit
 		}
 	}
