@@ -60,12 +60,11 @@ func NewModel(defaults resend.SendEmailRequest) Model {
 	from.Prompt = "From "
 	from.Placeholder = "me@example.com"
 	from.PromptStyle = labelStyle.Copy()
-	from.PromptStyle = activeLabelStyle
-	from.TextStyle = activeTextStyle
+	from.PromptStyle = labelStyle
+	from.TextStyle = textStyle
 	from.Cursor.Style = cursorStyle
 	from.PlaceholderStyle = placeholderStyle
 	from.SetValue(defaults.From)
-	from.Focus()
 
 	to := textinput.New()
 	to.Prompt = "To "
@@ -101,6 +100,19 @@ func NewModel(defaults resend.SendEmailRequest) Model {
 	body.SetValue(defaults.Text)
 	body.Blur()
 
+	// Decide which input to focus.
+	var state State
+	switch {
+	case defaults.From == "":
+		state = editingFrom
+	case len(defaults.To) == 0:
+		state = editingTo
+	case defaults.Subject == "":
+		state = editingSubject
+	case defaults.Text == "":
+		state = editingBody
+	}
+
 	attachments := list.New([]list.Item{}, attachmentDelegate{}, 0, 3)
 	attachments.DisableQuitKeybindings()
 	attachments.SetShowTitle(true)
@@ -118,8 +130,8 @@ func NewModel(defaults resend.SendEmailRequest) Model {
 	loadingSpinner := spinner.New()
 	loadingSpinner.Spinner = spinner.Dot
 
-	return Model{
-		state:          editingFrom,
+	m := Model{
+		state:          state,
 		From:           from,
 		To:             to,
 		Subject:        subject,
@@ -130,6 +142,10 @@ func NewModel(defaults resend.SendEmailRequest) Model {
 		keymap:         DefaultKeybinds(),
 		loadingSpinner: loadingSpinner,
 	}
+
+	m.focusActiveInput()
+
+	return m
 }
 
 func (m Model) Init() tea.Cmd {
