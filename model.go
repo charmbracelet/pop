@@ -25,6 +25,7 @@ const (
 	editingSubject
 	editingBody
 	editingAttachments
+	hoveringSendButton
 	pickingFile
 	sendingEmail
 )
@@ -193,6 +194,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case editingBody:
 				m.state = editingAttachments
 			case editingAttachments:
+				m.state = hoveringSendButton
+			case hoveringSendButton:
 				m.state = editingFrom
 			}
 			m.focusActiveInput()
@@ -201,7 +204,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.blurInputs()
 			switch m.state {
 			case editingFrom:
-				m.state = editingAttachments
+				m.state = hoveringSendButton
 			case editingTo:
 				m.state = editingFrom
 			case editingSubject:
@@ -210,6 +213,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.state = editingSubject
 			case editingAttachments:
 				m.state = editingBody
+			case hoveringSendButton:
+				m.state = editingAttachments
 			}
 			m.focusActiveInput()
 
@@ -339,6 +344,14 @@ func (m Model) View() string {
 	s.WriteString("\n\n")
 	s.WriteString(m.Attachments.View())
 	s.WriteString("\n")
+	if m.state == hoveringSendButton && m.canSend() {
+		s.WriteString(sendButtonActiveStyle.Render("Send"))
+	} else if m.state == hoveringSendButton {
+		s.WriteString(sendButtonInactiveStyle.Render("Send"))
+	} else {
+		s.WriteString(sendButtonStyle.Render("Send"))
+	}
+	s.WriteString("\n\n")
 	s.WriteString(m.help.View(m.keymap))
 
 	if m.err != nil {

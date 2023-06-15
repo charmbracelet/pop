@@ -28,7 +28,7 @@ func DefaultKeybinds() KeyMap {
 			key.WithDisabled(),
 		),
 		Attach: key.NewBinding(
-			key.WithKeys("a"),
+			key.WithKeys("a", "enter"),
 			key.WithHelp("a", "attach file"),
 			key.WithDisabled(),
 		),
@@ -67,8 +67,11 @@ func (k KeyMap) FullHelp() [][]key.Binding {
 
 func (m *Model) updateKeymap() {
 	m.keymap.Attach.SetEnabled(m.state == editingAttachments)
-	canSend := m.From.Value() != "" && m.To.Value() != "" && m.Subject.Value() != "" && m.Body.Value() != ""
-	m.keymap.Send.SetEnabled(canSend && m.state != editingBody && m.state != pickingFile)
+	m.keymap.Send.SetEnabled(m.canSend() && m.state == hoveringSendButton)
 	m.keymap.Unattach.SetEnabled(m.state == editingAttachments && len(m.Attachments.Items()) > 0)
 	m.keymap.Back.SetEnabled(m.state == pickingFile)
+}
+
+func (m Model) canSend() bool {
+	return m.From.Value() != "" && m.To.Value() != "" && m.Subject.Value() != "" && m.Body.Value() != ""
 }
