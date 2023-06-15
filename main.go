@@ -43,7 +43,7 @@ var rootCmd = &cobra.Command{
 				fmt.Println(errorStyle.Render(err.Error()))
 				return err
 			}
-			fmt.Printf("\n  Email %s sent to %s\n\n", activeTextStyle.Render("\""+subject+"\""), linkStyle.Render(strings.Join(to, ", ")))
+			fmt.Print(emailSummary(to, subject))
 			return nil
 		}
 
@@ -58,7 +58,7 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 		mm := m.(Model)
-		fmt.Printf("\n  Email %s sent to %s\n\n", activeTextStyle.Render("\""+mm.Subject.Value()+"\""), linkStyle.Render(mm.To.Value()))
+		fmt.Print(emailSummary(strings.Split(mm.To.Value(), TO_SEPARATOR), mm.Subject.Value()))
 		return nil
 	},
 }

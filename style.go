@@ -1,6 +1,11 @@
 package main
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/charmbracelet/lipgloss"
+)
 
 const accentColor = lipgloss.Color("99")
 const whiteColor = lipgloss.Color("255")
@@ -27,3 +32,9 @@ var (
 	inlineCodeStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF5F87")).Background(lipgloss.Color("#3A3A3A")).Padding(0, 1)
 	linkStyle       = lipgloss.NewStyle().Foreground(lipgloss.Color("#00AF87")).Underline(true)
 )
+
+// emailSummary returns a summary of the email that was sent. It is used when
+// the user has sent an email successfully.
+func emailSummary(to []string, subject string) string {
+	return fmt.Sprintf("\n  Email %s sent to %s\n\n", activeTextStyle.Render("\""+subject+"\""), linkStyle.Render(strings.Join(to, ", ")))
+}
