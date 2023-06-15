@@ -37,6 +37,9 @@ var rootCmd = &cobra.Command{
 		if len(to) > 0 && from != "" && subject != "" && body != "" {
 			err := sendEmail(to, from, subject, body, attachments)
 			if err != nil {
+				cmd.SilenceUsage = true
+				cmd.SilenceErrors = true
+				fmt.Println(errorStyle.Render(err.Error()))
 				return err
 			}
 			return nil

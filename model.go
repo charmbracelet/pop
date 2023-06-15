@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/filepicker"
 	"github.com/charmbracelet/bubbles/help"
@@ -128,6 +129,7 @@ func NewModel(defaults resend.SendEmailRequest) Model {
 	picker.CurrentDirectory, _ = os.UserHomeDir()
 
 	loadingSpinner := spinner.New()
+	loadingSpinner.Style = activeLabelStyle
 	loadingSpinner.Spinner = spinner.Dot
 
 	m := Model{
@@ -154,6 +156,14 @@ func (m Model) Init() tea.Cmd {
 	)
 }
 
+type clearErrMsg struct{}
+
+func clearErrAfter(d time.Duration) tea.Cmd {
+	return tea.Tick(d, func(t time.Time) tea.Msg {
+		return clearErrMsg{}
+	})
+}
+
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case sendEmailSuccessMsg:
@@ -161,7 +171,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 	case sendEmailFailureMsg:
 		m.state = editingFrom
+		m.focusActiveInput()
 		m.err = msg
+		return m, clearErrAfter(5 * time.Second)
+	case clearErrMsg:
+		m.err = nil
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.keymap.NextInput):
