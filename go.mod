@@ -8,6 +8,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.7.1
 	github.com/resendlabs/resend-go v1.6.0
 	github.com/spf13/cobra v1.7.0
+	github.com/yuin/goldmark v1.5.4
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 )
 

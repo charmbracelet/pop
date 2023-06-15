@@ -12,6 +12,7 @@ import (
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/resendlabs/resend-go"
 	"golang.org/x/exp/constraints"
 )
 
@@ -54,7 +55,7 @@ type Model struct {
 	err            error
 }
 
-func NewModel() Model {
+func NewModel(defaults resend.SendEmailRequest) Model {
 	from := textinput.New()
 	from.Prompt = "From "
 	from.Placeholder = "me@example.com"
@@ -63,6 +64,7 @@ func NewModel() Model {
 	from.TextStyle = activeTextStyle
 	from.Cursor.Style = cursorStyle
 	from.PlaceholderStyle = placeholderStyle
+	from.SetValue(defaults.From)
 	from.Focus()
 
 	to := textinput.New()
@@ -70,14 +72,18 @@ func NewModel() Model {
 	to.PromptStyle = labelStyle.Copy()
 	to.Cursor.Style = cursorStyle
 	to.PlaceholderStyle = placeholderStyle
+	to.TextStyle = textStyle
 	to.Placeholder = "you@example.com"
+	to.SetValue(strings.Join(defaults.To, TO_SEPARATOR))
 
 	subject := textinput.New()
 	subject.Prompt = "Subject "
 	subject.PromptStyle = labelStyle.Copy()
 	subject.Cursor.Style = cursorStyle
 	subject.PlaceholderStyle = placeholderStyle
+	subject.TextStyle = textStyle
 	subject.Placeholder = "Hello!"
+	subject.SetValue(defaults.Subject)
 
 	body := textarea.New()
 	body.Placeholder = "# Email"
@@ -91,6 +97,8 @@ func NewModel() Model {
 	body.BlurredStyle.Text = textStyle
 	body.BlurredStyle.Placeholder = placeholderStyle
 	body.Cursor.Style = cursorStyle
+	body.CharLimit = 4000
+	body.SetValue(defaults.Text)
 	body.Blur()
 
 	attachments := list.New([]list.Item{}, attachmentDelegate{}, 0, 3)
