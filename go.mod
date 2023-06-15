@@ -4,8 +4,9 @@ go 1.19
 
 require (
 	github.com/charmbracelet/bubbles v0.16.1
-	github.com/charmbracelet/bubbletea v0.24.3-0.20230609163353-b80eb8303bba
+	github.com/charmbracelet/bubbletea v0.24.3-0.20230614142509-c0cc6aa1fb4f
 	github.com/charmbracelet/lipgloss v0.7.1
+	github.com/resendlabs/resend-go v1.6.0
 	github.com/spf13/cobra v1.7.0
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 )
@@ -28,7 +29,7 @@ require (
 	github.com/sahilm/fuzzy v0.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.6.0 // indirect
+	golang.org/x/sys v0.8.0 // indirect
 	golang.org/x/term v0.6.0 // indirect
 	golang.org/x/text v0.3.8 // indirect
 )

@@ -19,4 +19,11 @@ var (
 	cursorStyle      = lipgloss.NewStyle().Foreground(whiteColor)
 
 	paddedStyle = lipgloss.NewStyle().Padding(1)
+
+	errorHeaderStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#F1F1F1")).Background(lipgloss.Color("#FF5F87")).Bold(true).Padding(0, 1).SetString("ERROR")
+	errorStyle       = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF5F87"))
+	commentStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("#757575"))
+
+	inlineCodeStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF5F87")).Background(lipgloss.Color("#3A3A3A")).Padding(0, 1)
+	linkStyle       = lipgloss.NewStyle().Foreground(lipgloss.Color("#00AF87")).Underline(true)
 )

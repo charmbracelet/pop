@@ -51,6 +51,7 @@ type Model struct {
 	help           help.Model
 	keymap         KeyMap
 	quitting       bool
+	err            error
 }
 
 func NewModel() Model {
@@ -106,7 +107,7 @@ func NewModel() Model {
 	picker := filepicker.New()
 	picker.CurrentDirectory, _ = os.UserHomeDir()
 
-	loadingSpinner := spinner.NewModel()
+	loadingSpinner := spinner.New()
 	loadingSpinner.Spinner = spinner.Dot
 
 	return Model{
@@ -132,13 +133,12 @@ func (m Model) Init() tea.Cmd {
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.WindowSizeMsg:
-		m.From.Width = msg.Width - 2
-		m.To.Width = msg.Width - 2
-		m.Subject.Width = msg.Width - 2
-		m.Body.SetWidth(msg.Width - 2)
-		m.Attachments.SetWidth(msg.Width - 2)
-
+	case sendEmailSuccessMsg:
+		m.quitting = true
+		return m, tea.Quit
+	case sendEmailFailureMsg:
+		m.state = editingFrom
+		m.err = msg
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.keymap.NextInput):
@@ -178,6 +178,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.state = sendingEmail
 			return m, tea.Batch(
 				m.loadingSpinner.Tick,
+				m.sendEmailCmd(),
 			)
 		case key.Matches(msg, m.keymap.Attach):
 			m.state = pickingFile
@@ -294,6 +295,11 @@ func (m Model) View() string {
 	s.WriteString(m.Attachments.View())
 	s.WriteString("\n")
 	s.WriteString(m.help.View(m.keymap))
+
+	if m.err != nil {
+		s.WriteString("\n\n")
+		s.WriteString(errorStyle.Render(m.err.Error()))
+	}
 
 	return paddedStyle.Render(s.String())
 }
