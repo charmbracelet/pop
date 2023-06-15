@@ -72,12 +72,12 @@ func hasStdin() bool {
 }
 
 func init() {
-	rootCmd.Flags().StringSliceVar(&to, "bcc", []string{}, "Blind carbon copy recipients")
-	rootCmd.Flags().StringSliceVar(&to, "cc", []string{}, "Carbon copy recipients")
+	rootCmd.Flags().StringSliceVar(&to, "bcc", []string{}, "BCC recipients")
+	rootCmd.Flags().StringSliceVar(&to, "cc", []string{}, "CC recipients")
 	rootCmd.Flags().StringSliceVarP(&attachments, "attach", "a", []string{}, "Email's attachments")
-	rootCmd.Flags().StringSliceVarP(&to, "to", "t", []string{}, "Recipient emails")
-	rootCmd.Flags().StringVarP(&body, "body", "b", "", "Email's body (markdown)")
-	rootCmd.Flags().StringVarP(&from, "from", "f", os.Getenv(RESEND_FROM), "Email's sender ($RESEND_FROM)")
+	rootCmd.Flags().StringSliceVarP(&to, "to", "t", []string{}, "Recipients")
+	rootCmd.Flags().StringVarP(&body, "body", "b", "", "Email's contents")
+	rootCmd.Flags().StringVarP(&from, "from", "f", os.Getenv(RESEND_FROM), "Email's sender "+commentStyle.Render("($RESEND_FROM)"))
 	rootCmd.Flags().StringVarP(&subject, "subject", "s", "", "Email's subject")
 }
 
