@@ -170,6 +170,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.quitting = true
 		return m, tea.Quit
 	case sendEmailFailureMsg:
+		m.blurInputs()
 		m.state = editingFrom
 		m.focusActiveInput()
 		m.err = msg

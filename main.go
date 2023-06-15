@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/resendlabs/resend-go"
@@ -42,6 +43,7 @@ var rootCmd = &cobra.Command{
 				fmt.Println(errorStyle.Render(err.Error()))
 				return err
 			}
+			fmt.Printf("\n  Email %s sent to %s\n\n", activeTextStyle.Render("\""+subject+"\""), linkStyle.Render(strings.Join(to, ", ")))
 			return nil
 		}
 
@@ -51,10 +53,12 @@ var rootCmd = &cobra.Command{
 			Subject: subject,
 			Text:    body,
 		}))
-		_, err := p.Run()
+		m, err := p.Run()
 		if err != nil {
 			return err
 		}
+		mm := m.(Model)
+		fmt.Printf("\n  Email %s sent to %s\n\n", activeTextStyle.Render("\""+mm.Subject.Value()+"\""), linkStyle.Render(mm.To.Value()))
 		return nil
 	},
 }
