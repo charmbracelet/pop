@@ -28,8 +28,8 @@ func DefaultKeybinds() KeyMap {
 			key.WithDisabled(),
 		),
 		Attach: key.NewBinding(
-			key.WithKeys("a", "enter"),
-			key.WithHelp("a", "attach file"),
+			key.WithKeys("enter"),
+			key.WithHelp("enter", "attach file"),
 			key.WithDisabled(),
 		),
 		Unattach: key.NewBinding(
