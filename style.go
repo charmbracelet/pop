@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -41,5 +40,17 @@ var (
 // emailSummary returns a summary of the email that was sent. It is used when
 // the user has sent an email successfully.
 func emailSummary(to []string, subject string) string {
-	return fmt.Sprintf("\n  Email %s sent to %s\n\n", activeTextStyle.Render("\""+subject+"\""), linkStyle.Render(strings.Join(to, ", ")))
+	var s strings.Builder
+	s.WriteString("\n  Email ")
+	s.WriteString(activeTextStyle.Render("\"" + subject + "\""))
+	s.WriteString(" sent to ")
+	for i, t := range to {
+		if i > 0 {
+			s.WriteString(", ")
+		}
+		s.WriteString(linkStyle.Render(t))
+	}
+	s.WriteString("\n\n")
+
+	return s.String()
 }
