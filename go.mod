@@ -1,4 +1,4 @@
-module github.com/maaslalani/email
+module github.com/charmbracelet/pop
 
 go 1.19
 
