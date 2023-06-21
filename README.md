@@ -1,6 +1,8 @@
 # Pop
 
 <p>
+  <img src="https://stuff.charm.sh/pop/pop.png" width="500" />
+  <br />
   <a href="https://github.com/charmbracelet/vhs/releases"><img src="https://img.shields.io/github/release/charmbracelet/vhs.svg" alt="Latest Release"></a>
   <a href="https://pkg.go.dev/github.com/charmbracelet/vhs?tab=doc"><img src="https://godoc.org/github.com/golang/gddo?status.svg" alt="Go Docs"></a>
   <a href="https://github.com/charmbracelet/vhs/actions"><img src="https://github.com/charmbracelet/vhs/workflows/build/badge.svg" alt="Build Status"></a>
@@ -29,6 +31,12 @@ pop < message.md \
 ```
 
 <img src="https://vhs.charm.sh/vhs-34Bcki61sHuNlsxfFVLbj4.gif" alt="pop mail command line client">
+
+### Environment
+
+To use `pop`, you will need a `RESEND_API_KEY`. You can grab one from: https://resend.com/api-keys.
+
+
 
 ## Installation
 
