@@ -39,11 +39,9 @@ func (m Model) sendEmailCmd() tea.Cmd {
 func sendEmail(to []string, from, subject, body string, paths []string) error {
 	client := resend.NewClient(os.Getenv(RESEND_API_KEY))
 
-	var html, text = bytes.NewBufferString(""), bytes.NewBufferString("")
-	err := goldmark.Convert([]byte(body), html)
-	if err != nil {
-		text.WriteString(body)
-	}
+	html := bytes.NewBufferString("")
+	// If the conversion fails, we'll simply send the plain-text body.
+	_ = goldmark.Convert([]byte(body), html)
 
 	attachments := make([]resend.Attachment, len(paths))
 	for i, a := range paths {
@@ -66,11 +64,11 @@ func sendEmail(to []string, from, subject, body string, paths []string) error {
 		To:          to,
 		Subject:     subject,
 		Html:        html.String(),
-		Text:        text.String(),
+		Text:        body,
 		Attachments: attachments,
 	}
 
-	_, err = client.Emails.Send(request)
+	_, err := client.Emails.Send(request)
 	if err != nil {
 		return err
 	}
