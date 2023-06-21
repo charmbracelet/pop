@@ -8,7 +8,7 @@
 
 Send emails from your terminal.
 
-<img width="600" src="https://vhs.charm.sh/vhs-5Ci4SK0PHtyZGoccEOvUEB.gif" alt="pop mail client">
+<img width="600" src="https://vhs.charm.sh/vhs-5Ci4SK0PHtyZGoccEOvUEB.gif" alt="pop mail text-based client">
 
 ## Text-based User Interface
 
@@ -27,6 +27,8 @@ pop < message.md \
     --subject "Hello, world!" \
     --attach invoice.pdf
 ```
+
+<img src="https://vhs.charm.sh/vhs-34Bcki61sHuNlsxfFVLbj4.gif" alt="pop mail command line client">
 
 ## Installation
 
