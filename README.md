@@ -10,7 +10,7 @@
 
 Send emails from your terminal.
 
-<img width="600" src="https://vhs.charm.sh/vhs-5Ci4SK0PHtyZGoccEOvUEB.gif" alt="pop mail text-based client">
+<img width="500" src="https://vhs.charm.sh/vhs-5Ci4SK0PHtyZGoccEOvUEB.gif" alt="pop mail text-based client">
 
 ## Text-based User Interface
 
@@ -30,13 +30,19 @@ pop < message.md \
     --attach invoice.pdf
 ```
 
-<img src="https://vhs.charm.sh/vhs-34Bcki61sHuNlsxfFVLbj4.gif" alt="pop mail command line client">
+<img width="500" src="https://vhs.charm.sh/vhs-34Bcki61sHuNlsxfFVLbj4.gif" alt="pop mail command line client">
 
 ### Environment
 
 To use `pop`, you will need a `RESEND_API_KEY`. You can grab one from: https://resend.com/api-keys.
 
+To avoid typing your `From: ` email address, you can also set the `RESEND_FROM`
+environment to pre-fill the field anytime you launch `pop`.
 
+```bash
+export RESEND_API_KEY=$(pass RESEND_API_KEY)
+export RESEND_FROM=pop@charm.sh
+```
 
 ## Installation
 
