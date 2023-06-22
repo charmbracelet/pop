@@ -10,7 +10,7 @@
 
 Send emails from your terminal.
 
-<img width="500" src="https://vhs.charm.sh/vhs-5Ci4SK0PHtyZGoccEOvUEB.gif" alt="pop mail text-based client">
+<img width="500" src="https://vhs.charm.sh/vhs-4P8XQmwyjaq7Vcp4z3QbEd.gif" alt="pop mail text-based client">
 
 ## Text-based User Interface
 

@@ -34,7 +34,7 @@ Type "# Welcome to Pop."
 Sleep 0.5
 Enter 2
 Sleep 0.5
-Type "Send **emails** from the _terminal_."
+Type "Send *emails* from the terminal."
 Sleep 0.5
 Enter 2
 Sleep 0.5
