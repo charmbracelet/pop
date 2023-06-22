@@ -70,6 +70,16 @@ func (m *Model) updateKeymap() {
 	m.keymap.Send.SetEnabled(m.canSend() && m.state == hoveringSendButton)
 	m.keymap.Unattach.SetEnabled(m.state == editingAttachments && len(m.Attachments.Items()) > 0)
 	m.keymap.Back.SetEnabled(m.state == pickingFile)
+
+	m.filepicker.KeyMap.Up.SetEnabled(m.state == pickingFile)
+	m.filepicker.KeyMap.Down.SetEnabled(m.state == pickingFile)
+	m.filepicker.KeyMap.Back.SetEnabled(m.state == pickingFile)
+	m.filepicker.KeyMap.Select.SetEnabled(m.state == pickingFile)
+	m.filepicker.KeyMap.Open.SetEnabled(m.state == pickingFile)
+	m.filepicker.KeyMap.PageUp.SetEnabled(m.state == pickingFile)
+	m.filepicker.KeyMap.PageDown.SetEnabled(m.state == pickingFile)
+	m.filepicker.KeyMap.GoToTop.SetEnabled(m.state == pickingFile)
+	m.filepicker.KeyMap.GoToLast.SetEnabled(m.state == pickingFile)
 }
 
 func (m Model) canSend() bool {
