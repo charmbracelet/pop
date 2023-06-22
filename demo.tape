@@ -5,7 +5,7 @@ Set Width 800
 Set Height 800
 
 Hide
-  Type "export RESEND_API_KEY=$(pass RESEND_API_KEY)"
+  Type "export RESEND_API_KEY=$(pass RESEND_CHARM_API_KEY)"
   Enter
   Sleep 1
   Ctrl+L
@@ -15,12 +15,12 @@ Type "pop"
 Enter
 Sleep 1
 
-Type "pop@lalani.dev"
+Type "pop@charm.sh"
 Sleep 0.5
 Tab
 Sleep 1
 
-Type "maas@charm.sh"
+Type "vt100@charm.sh"
 Sleep 0.5
 Tab
 Sleep 1
