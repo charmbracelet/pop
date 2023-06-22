@@ -3,9 +3,9 @@
 <p>
   <img src="https://stuff.charm.sh/pop/pop-header.png" width="500" />
   <br />
-  <a href="https://github.com/charmbracelet/vhs/releases"><img src="https://img.shields.io/github/release/charmbracelet/vhs.svg" alt="Latest Release"></a>
-  <a href="https://pkg.go.dev/github.com/charmbracelet/vhs?tab=doc"><img src="https://godoc.org/github.com/golang/gddo?status.svg" alt="Go Docs"></a>
-  <a href="https://github.com/charmbracelet/vhs/actions"><img src="https://github.com/charmbracelet/vhs/workflows/build/badge.svg" alt="Build Status"></a>
+  <a href="https://github.com/charmbracelet/pop/releases"><img src="https://img.shields.io/github/release/charmbracelet/pop.svg" alt="Latest Release"></a>
+  <a href="https://pkg.go.dev/github.com/charmbracelet/pop?tab=doc"><img src="https://godoc.org/github.com/golang/gddo?status.svg" alt="Go Docs"></a>
+  <a href="https://github.com/charmbracelet/pop/actions"><img src="https://github.com/charmbracelet/vhs/workflows/build/badge.svg" alt="Build Status"></a>
 </p>
 
 Send emails from your terminal.
@@ -69,21 +69,21 @@ Or download a binary from the [releases](https://github.com/charmbracelet/pop/re
 
 ## License
 
-[MIT](https://github.com/charmbracelet/pop/blob/master/LICENSE)
+[MIT](https://github.com/charmbracelet/pop/blob/main/LICENSE)
 
 ## Feedback
 
 We’d love to hear your thoughts on this project. Feel free to drop us a note!
 
-* [Twitter](https://twitter.com/charmcli)
-* [The Fediverse](https://mastodon.social/@charmcli)
-* [Discord](https://charm.sh/chat)
+- [Twitter](https://twitter.com/charmcli)
+- [The Fediverse](https://mastodon.social/@charmcli)
+- [Discord](https://charm.sh/chat)
 
 ## License
 
-[MIT](https://github.com/charmbracelet/vhs/raw/main/LICENSE)
+[MIT](https://github.com/charmbracelet/pop/raw/main/LICENSE)
 
-***
+---
 
 Part of [Charm](https://charm.sh).
 
@@ -95,4 +95,4 @@ Part of [Charm](https://charm.sh).
   />
 </a>
 
-Charm热爱开源 • Charm loves open source
+Charm 热爱开源 • Charm loves open source
