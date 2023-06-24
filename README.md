@@ -1,7 +1,7 @@
 # Pop
 
 <p>
-  <img src="https://stuff.charm.sh/pop/pop-header.png" width="500" />
+  <img src="https://stuff.charm.sh/pop/pop.png" width="400" />
   <br />
   <a href="https://github.com/charmbracelet/pop/releases"><img src="https://img.shields.io/github/release/charmbracelet/pop.svg" alt="Latest Release"></a>
   <a href="https://pkg.go.dev/github.com/charmbracelet/pop?tab=doc"><img src="https://godoc.org/github.com/golang/gddo?status.svg" alt="Go Docs"></a>
