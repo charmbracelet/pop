@@ -43,6 +43,28 @@ func sendEmail(to []string, from, subject, body string, paths []string) error {
 	// If the conversion fails, we'll simply send the plain-text body.
 	_ = goldmark.Convert([]byte(body), html)
 
+	request := &resend.SendEmailRequest{
+		From:        from,
+		To:          to,
+		Subject:     subject,
+		Html:        html.String(),
+		Text:        body,
+		Attachments: makeAttachments(paths),
+	}
+
+	_, err := client.Emails.Send(request)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func makeAttachments(paths []string) []resend.Attachment {
+	if len(paths) == 0 {
+		return nil
+	}
+
 	attachments := make([]resend.Attachment, len(paths))
 	for i, a := range paths {
 		f, err := os.ReadFile(a)
@@ -55,23 +77,5 @@ func sendEmail(to []string, from, subject, body string, paths []string) error {
 		}
 	}
 
-	if len(attachments) == 0 {
-		attachments = nil
-	}
-
-	request := &resend.SendEmailRequest{
-		From:        from,
-		To:          to,
-		Subject:     subject,
-		Html:        html.String(),
-		Text:        body,
-		Attachments: attachments,
-	}
-
-	_, err := client.Emails.Send(request)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return attachments
 }

@@ -54,10 +54,11 @@ var rootCmd = &cobra.Command{
 		}
 
 		p := tea.NewProgram(NewModel(resend.SendEmailRequest{
-			From:    from,
-			To:      to,
-			Subject: subject,
-			Text:    body,
+			From:        from,
+			To:          to,
+			Subject:     subject,
+			Text:        body,
+			Attachments: makeAttachments(attachments),
 		}))
 		m, err := p.Run()
 		if err != nil {

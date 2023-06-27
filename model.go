@@ -127,6 +127,10 @@ func NewModel(defaults resend.SendEmailRequest) Model {
 	attachments.SetStatusBarItemName("attachment", "attachments")
 	attachments.SetShowPagination(false)
 
+	for _, a := range defaults.Attachments {
+		attachments.InsertItem(0, attachment(a.Filename))
+	}
+
 	picker := filepicker.New()
 	picker.CurrentDirectory, _ = os.UserHomeDir()
 
