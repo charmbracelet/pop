@@ -32,9 +32,15 @@ pop < message.md \
 
 <img width="500" src="https://vhs.charm.sh/vhs-28eAQHRSZilAiXKqTccLCr.gif" alt="pop mail command line client">
 
-### Environment
+---
 
-To use `pop`, you will need a `RESEND_API_KEY`. You can grab one from: https://resend.com/api-keys.
+<img width="600" src="https://stuff.charm.sh/pop/resend-x-charm.png" alt="Resend and Charm logos">
+
+To use `pop`, you will need a `RESEND_API_KEY`.
+
+You can grab one from: https://resend.com/api-keys.
+
+### Environment
 
 To avoid typing your `From: ` email address, you can also set the `RESEND_FROM`
 environment to pre-fill the field anytime you launch `pop`.
