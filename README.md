@@ -94,7 +94,7 @@ pop --body '$(mods -f "Write an email about how the command line is the best.")'
     --preview
 ```
 
-<img width="800" src="https://vhs.charm.sh/vhs-7HCNsfpzbO7kiA2ux40IDC.gif" alt="Generate email with mods and send email with pop.">
+<img width="600" src="https://vhs.charm.sh/vhs-1O3zo8Nsi2kPVW3vOBw4WH.gif" alt="Generate email with mods and send email with pop.">
 
 * [`charmbracelet/mods`](https://github.com/charmbracelet/mods)
 
@@ -107,7 +107,7 @@ pop --from $(gum choose "vt52@charm.sh" "vt78@charm.sh" "vt100@charm.sh")
     --to $(gum filter < contacts.txt)
 ```
 
-<img width="800" src="https://vhs.charm.sh/vhs-7N2XwLTlnIZdzyD8OaYRHx.gif" alt="Select contact information with gum and send email with pop.">
+<img width="600" src="https://vhs.charm.sh/vhs-Et9ooHB6L1XVWDL9U1TfI.gif" alt="Select contact information with gum and send email with pop.">
 
 * [`charmbracelet/gum`](https://github.com/charmbracelet/gum)
 
@@ -121,7 +121,7 @@ invoice generate --item "Rubber Ducky" --rate 25 --quantity 2 --output $FILENAME
 pop --attach $FILENAME --to client@example.com --from rubberducky@quack.com --body "See attached invoice."
 ```
 
-<img width="800" src="https://vhs.charm.sh/vhs-6c1gS2kld2NblvjxNitC1H.gif" alt="Generate invoice with invoice and attach file and send email with pop.">
+<img width="600" src="https://vhs.charm.sh/vhs-4TRyv82BBDKOutgWdvyshr.gif" alt="Generate invoice with invoice and attach file and send email with pop.">
 
 * [`maaslalani/invoice`](https://github.com/maaslalani/invoice)
 
