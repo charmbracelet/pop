@@ -73,6 +73,58 @@ go install github.com/charmbracelet/pop@latest
 
 Or download a binary from the [releases](https://github.com/charmbracelet/pop/releases).
 
+## Examples
+
+Pop can be combined with other tools to create powerful email pipelines, such as:
+
+* [`charmbracelet/mods`](https://github.com/charmbracelet/mods)
+* [`charmbracelet/gum`](https://github.com/charmbracelet/gum)
+* [`maaslalani/invoice`](https://github.com/maaslalani/invoice)
+
+### Mods
+
+Use [`mods`](https://github.com/charmbracelet/mods) with `pop` to write an email body with AI:
+
+> **Note**:
+> Use the `--preview` flag to preview the email and make changes before sending.
+
+```bash
+pop --body '$(mods -f "Write an email about how the command line is the best.")'
+    --subject '$(mods "Write a catchy email subject about the command line is the best computing platform.")'
+    --preview
+```
+
+<img width="800" src="https://vhs.charm.sh/vhs-7HCNsfpzbO7kiA2ux40IDC.gif" alt="Generate email with mods and send email with pop.">
+
+* [`charmbracelet/mods`](https://github.com/charmbracelet/mods)
+
+### Gum
+
+Use [`gum`](https://github.com/charmbracelet/gum) with `pop` to choose an email to send to and from:
+
+```bash
+pop --from $(gum choose "vt52@charm.sh" "vt78@charm.sh" "vt100@charm.sh")
+    --to $(gum filter < contacts.txt)
+```
+
+<img width="800" src="https://vhs.charm.sh/vhs-7N2XwLTlnIZdzyD8OaYRHx.gif" alt="Select contact information with gum and send email with pop.">
+
+* [`charmbracelet/gum`](https://github.com/charmbracelet/gum)
+
+### Invoice
+
+Use [`invoice`](https://github.com/maaslalani/invoice) with `pop` to generate and send invoices entirely from the command line.
+
+```bash
+FILENAME=invoice.pdf
+invoice generate --item "Rubber Ducky" --rate 25 --quantity 2 --output $FILENAME
+pop --attach $FILENAME --to client@example.com --from rubberducky@quack.com --body "See attached invoice."
+```
+
+<img width="800" src="https://vhs.charm.sh/vhs-6c1gS2kld2NblvjxNitC1H.gif" alt="Generate invoice with invoice and attach file and send email with pop.">
+
+* [`maaslalani/invoice`](https://github.com/maaslalani/invoice)
+
 ## License
 
 [MIT](https://github.com/charmbracelet/pop/blob/main/LICENSE)
