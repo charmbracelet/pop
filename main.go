@@ -20,6 +20,7 @@ var (
 	subject     string
 	body        string
 	attachments []string
+	preview     bool
 )
 
 var rootCmd = &cobra.Command{
@@ -41,7 +42,7 @@ var rootCmd = &cobra.Command{
 			body = string(b)
 		}
 
-		if len(to) > 0 && from != "" && subject != "" && body != "" {
+		if len(to) > 0 && from != "" && subject != "" && body != "" && !preview {
 			err := sendEmail(to, from, subject, body, attachments)
 			if err != nil {
 				cmd.SilenceUsage = true
@@ -86,6 +87,7 @@ func init() {
 	rootCmd.Flags().StringVarP(&body, "body", "b", "", "Email's contents")
 	rootCmd.Flags().StringVarP(&from, "from", "f", os.Getenv(RESEND_FROM), "Email's sender "+commentStyle.Render("($RESEND_FROM)"))
 	rootCmd.Flags().StringVarP(&subject, "subject", "s", "", "Email's subject")
+	rootCmd.Flags().BoolVarP(&preview, "preview", "p", false, "Whether to preview the email before sending")
 }
 
 func main() {
