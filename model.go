@@ -101,6 +101,11 @@ func NewModel(defaults resend.SendEmailRequest) Model {
 	body.Cursor.Style = cursorStyle
 	body.CharLimit = 4000
 	body.SetValue(defaults.Text)
+
+	// Adjust for signature (if none, this is a no-op)
+	body.CursorUp()
+	body.CursorUp()
+
 	body.Blur()
 
 	// Decide which input to focus.

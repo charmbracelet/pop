@@ -42,12 +42,13 @@ You can grab one from: https://resend.com/api-keys.
 
 ### Environment
 
-To avoid typing your `From: ` email address, you can also set the `RESEND_FROM`
+To avoid typing your `From: ` email address, you can also set the `POP_FROM`
 environment to pre-fill the field anytime you launch `pop`.
 
 ```bash
 export RESEND_API_KEY=$(pass RESEND_API_KEY)
-export RESEND_FROM=pop@charm.sh
+export POP_FROM=pop@charm.sh
+export POP_SIGNATURE="Sent with [Pop](https://github.com/charmbracelet/pop)!"
 ```
 
 ## Installation
