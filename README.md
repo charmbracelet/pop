@@ -10,7 +10,7 @@
 
 Send emails from your terminal.
 
-<img width="500" src="https://vhs.charm.sh/vhs-25OHmk90ODL9BefXZ1P99I.gif" alt="pop mail text-based client">
+<img width="500" src="https://vhs.charm.sh/vhs-35QM62TyR89f1oPlPickK3.gif" alt="pop mail text-based client">
 
 ## Text-based User Interface
 
@@ -30,7 +30,7 @@ pop < message.md \
     --attach invoice.pdf
 ```
 
-<img width="500" src="https://vhs.charm.sh/vhs-28eAQHRSZilAiXKqTccLCr.gif" alt="pop mail command line client">
+<img width="500" src="https://vhs.charm.sh/vhs-5Cr6Gt1YVBjxGr9zdS85AO.gif" alt="pop mail command line client">
 
 ---
 
