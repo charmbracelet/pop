@@ -1,8 +1,9 @@
-Output demo.gif
-Set Padding 40
-Set FontSize 20
-Set Width 600
-Set Height 400
+Output cli.gif
+Set Framerate 30
+Set Padding 70
+Set FontSize 38
+Set Width 1200
+Set Height 800
 
 Hide
   Type "export RESEND_API_KEY=$(pass RESEND_CHARM_API_KEY)"
@@ -12,10 +13,10 @@ Hide
 Show
 
 Type "pop < message.md \" Enter
-Type "--from 'pop@charm.sh' \" Enter
-Type "--to 'vt100@charm.sh' \" Enter
-Type "--subject 'Pop' \" Enter
-Type "--attach README.md"
+Type "  --from 'pop@charm.sh' \" Enter
+Type "  --to 'vt100@charm.sh' \" Enter
+Type "  --subject 'Pop' \" Enter
+Type "  --attach README.md"
 Sleep 0.5
 Enter
 Sleep 5

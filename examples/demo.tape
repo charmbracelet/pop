@@ -1,8 +1,9 @@
 Output demo.gif
-Set FontSize 25
+Set Framerate 30
+Set FontSize 40
 Set Padding 50
-Set Width 800
-Set Height 800
+Set Width 1200
+Set Height 1200
 
 Hide
   Type "export RESEND_API_KEY=$(pass RESEND_CHARM_API_KEY)"
@@ -13,7 +14,7 @@ Show
 
 Type "pop"
 Enter
-Sleep 1
+Sleep 2
 
 Type "pop@charm.sh"
 Sleep 0.5
