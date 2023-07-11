@@ -1,9 +1,9 @@
 Output demo.gif
-Set Framerate 30
-Set FontSize 40
+Set Framerate 28
+Set FontSize 33
 Set Padding 50
-Set Width 1200
-Set Height 1200
+Set Width 1000
+Set Height 1000
 
 Hide
   Type "export RESEND_API_KEY=$(pass RESEND_CHARM_API_KEY)"
