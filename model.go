@@ -127,6 +127,7 @@ func NewModel(defaults resend.SendEmailRequest) Model {
 	attachments.Title = "Attachments"
 	attachments.Styles.Title = labelStyle
 	attachments.Styles.TitleBar = labelStyle
+	attachments.Styles.NoItems = placeholderStyle
 	attachments.SetShowHelp(false)
 	attachments.SetShowStatusBar(false)
 	attachments.SetStatusBarItemName("attachment", "attachments")
