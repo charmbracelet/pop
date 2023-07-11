@@ -12,7 +12,8 @@ import (
 )
 
 const RESEND_API_KEY = "RESEND_API_KEY"
-const RESEND_FROM = "RESEND_FROM"
+const POP_FROM = "POP_FROM"
+const POP_SIGNATURE = "POP_SIGNATURE"
 
 var (
 	from        string
@@ -21,6 +22,7 @@ var (
 	body        string
 	attachments []string
 	preview     bool
+	signature   string
 )
 
 var rootCmd = &cobra.Command{
@@ -40,6 +42,10 @@ var rootCmd = &cobra.Command{
 				return err
 			}
 			body = string(b)
+		}
+
+		if signature != "" {
+			body += "\n\n" + signature
 		}
 
 		if len(to) > 0 && from != "" && subject != "" && body != "" && !preview {
@@ -85,9 +91,12 @@ func init() {
 	rootCmd.Flags().StringSliceVarP(&attachments, "attach", "a", []string{}, "Email's attachments")
 	rootCmd.Flags().StringSliceVarP(&to, "to", "t", []string{}, "Recipients")
 	rootCmd.Flags().StringVarP(&body, "body", "b", "", "Email's contents")
-	rootCmd.Flags().StringVarP(&from, "from", "f", os.Getenv(RESEND_FROM), "Email's sender "+commentStyle.Render("($RESEND_FROM)"))
+	envFrom := os.Getenv(POP_FROM)
+	rootCmd.Flags().StringVarP(&from, "from", "f", envFrom, "Email's sender "+commentStyle.Render("($"+POP_FROM+")"))
 	rootCmd.Flags().StringVarP(&subject, "subject", "s", "", "Email's subject")
 	rootCmd.Flags().BoolVarP(&preview, "preview", "p", false, "Whether to preview the email before sending")
+	envSignature := os.Getenv("POP_SIGNATURE")
+	rootCmd.Flags().StringVarP(&signature, "signature", "x", envSignature, "Signature to display at the end of the email. "+commentStyle.Render("($"+POP_SIGNATURE+")"))
 }
 
 func main() {
