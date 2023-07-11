@@ -89,8 +89,8 @@ Use [`mods`](https://github.com/charmbracelet/mods) with `pop` to write an email
 > Use the `--preview` flag to preview the email and make changes before sending.
 
 ```bash
-pop --body '$(mods -f "Write an email about how the command line is the best.")'
-    --subject '$(mods "Write a catchy email subject about the command line is the best computing platform.")'
+pop <<< '$(mods -f "Explain why CLIs are awesome")' \
+    --subject "The command line is the best" \
     --preview
 ```
 
@@ -118,7 +118,7 @@ Use [`invoice`](https://github.com/maaslalani/invoice) with `pop` to generate an
 ```bash
 FILENAME=invoice.pdf
 invoice generate --item "Rubber Ducky" --rate 25 --quantity 2 --output $FILENAME
-pop --attach $FILENAME --to client@example.com --from rubberducky@quack.com --body "See attached invoice."
+pop --attach $FILENAME --body "See attached invoice."
 ```
 
 <img width="600" src="https://vhs.charm.sh/vhs-4TRyv82BBDKOutgWdvyshr.gif" alt="Generate invoice with invoice and attach file and send email with pop.">
