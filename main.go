@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime/debug"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -26,9 +27,9 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "email",
-	Short: "email is a command line interface for sending emails.",
-	Long:  `email is a command line interface for sending emails.`,
+	Use:   "pop",
+	Short: "Send emails from your terminal",
+	Long:  `Pop is a tool for sending emails from your terminal.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if os.Getenv(RESEND_API_KEY) == "" {
 			fmt.Printf("\n  %s %s %s\n\n", errorHeaderStyle.String(), inlineCodeStyle.Render(RESEND_API_KEY), "environment variable is required.")
@@ -85,7 +86,42 @@ func hasStdin() bool {
 	return err == nil && (stat.Mode()&os.ModeCharDevice) == 0
 }
 
+var (
+	// Version stores the build version of VHS at the time of package through
+	// -ldflags.
+	//
+	// go build -ldflags "-s -w -X=main.Version=$(VERSION)"
+	Version string
+
+	// CommitSHA stores the git commit SHA at the time of package through -ldflags.
+	CommitSHA string
+)
+
+var CompletionCmd = &cobra.Command{
+	Use:                   "completion [bash|zsh|fish|powershell]",
+	Short:                 "Generate completion script",
+	Long:                  `To load completions`,
+	DisableFlagsInUseLine: true,
+	ValidArgs:             []string{"bash", "zsh", "fish", "powershell"},
+	Args:                  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		switch args[0] {
+		case "bash":
+			return rootCmd.GenBashCompletion(os.Stdout)
+		case "zsh":
+			return rootCmd.GenZshCompletion(os.Stdout)
+		case "fish":
+			return rootCmd.GenFishCompletion(os.Stdout, true)
+		case "powershell":
+			return rootCmd.GenPowerShellCompletion(os.Stdout)
+		}
+		return nil
+	},
+}
+
 func init() {
+	rootCmd.AddCommand(CompletionCmd)
+
 	rootCmd.Flags().StringSliceVar(&to, "bcc", []string{}, "BCC recipients")
 	rootCmd.Flags().StringSliceVar(&to, "cc", []string{}, "CC recipients")
 	rootCmd.Flags().StringSliceVarP(&attachments, "attach", "a", []string{}, "Email's attachments")
@@ -97,6 +133,21 @@ func init() {
 	rootCmd.Flags().BoolVarP(&preview, "preview", "p", false, "Whether to preview the email before sending")
 	envSignature := os.Getenv("POP_SIGNATURE")
 	rootCmd.Flags().StringVarP(&signature, "signature", "x", envSignature, "Signature to display at the end of the email. "+commentStyle.Render("($"+POP_SIGNATURE+")"))
+
+	rootCmd.CompletionOptions.HiddenDefaultCmd = true
+
+	if len(CommitSHA) >= 7 { //nolint:gomnd
+		vt := rootCmd.VersionTemplate()
+		rootCmd.SetVersionTemplate(vt[:len(vt)-1] + " (" + CommitSHA[0:7] + ")\n")
+	}
+	if Version == "" {
+		if info, ok := debug.ReadBuildInfo(); ok && info.Main.Sum != "" {
+			Version = info.Main.Version
+		} else {
+			Version = "unknown (built from source)"
+		}
+	}
+	rootCmd.Version = Version
 }
 
 func main() {
