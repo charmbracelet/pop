@@ -1,0 +1,13 @@
+includes:
+  - from_url:
+      url: charmbracelet/meta/main/goreleaser-simple.yaml
+
+variables:
+  main: "."
+  binary_name: pop
+  description: "Send emails from your terminal. 📬"
+  github_url: "https://github.com/charmbracelet/pop"
+  maintainer: "Maas Lalani <maas@charm.sh>"
+  brew_commit_author_name: "Maas Lalani"
+  brew_commit_author_email: "maas@charm.sh"
+# yaml-language-server: $schema=https://goreleaser.com/static/schema-pro.json
