@@ -6,6 +6,8 @@ require (
 	github.com/charmbracelet/bubbles v0.16.2-0.20230711184233-0bdcc628fb8f
 	github.com/charmbracelet/bubbletea v0.24.3-0.20230710130425-c4c83ba757f8
 	github.com/charmbracelet/lipgloss v0.7.1
+	github.com/muesli/mango-cobra v1.2.0
+	github.com/muesli/roff v0.1.0
 	github.com/resendlabs/resend-go v1.7.0
 	github.com/spf13/cobra v1.7.0
 	github.com/yuin/goldmark v1.5.4
@@ -24,6 +26,8 @@ require (
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
+	github.com/muesli/mango v0.1.0 // indirect
+	github.com/muesli/mango-pflag v0.1.0 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect

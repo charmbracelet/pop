@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	mcobra "github.com/muesli/mango-cobra"
+	"github.com/muesli/roff"
 	"github.com/resendlabs/resend-go"
 	"github.com/spf13/cobra"
 )
@@ -119,8 +121,26 @@ var CompletionCmd = &cobra.Command{
 	},
 }
 
+var ManCmd = &cobra.Command{
+	Use:    "man",
+	Short:  "Generate man page",
+	Long:   `To generate the man page`,
+	Args:   cobra.NoArgs,
+	Hidden: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		page, err := mcobra.NewManPage(1, rootCmd) // .
+		if err != nil {
+			return err
+		}
+
+		page = page.WithSection("Copyright", "© 2023 Charmbracelet, Inc.\n"+"Released under MIT License.")
+		fmt.Println(page.Build(roff.NewDocument()))
+		return nil
+	},
+}
+
 func init() {
-	rootCmd.AddCommand(CompletionCmd)
+	rootCmd.AddCommand(CompletionCmd, ManCmd)
 
 	rootCmd.Flags().StringSliceVar(&to, "bcc", []string{}, "BCC recipients")
 	rootCmd.Flags().StringSliceVar(&to, "cc", []string{}, "CC recipients")
