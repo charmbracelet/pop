@@ -1,3 +1,5 @@
 *.gif
 *.pdf
 dist
+completions
+manpages
