@@ -14,7 +14,7 @@ func isContact(recipient *[]string) {
 
 			// Usually it's != nil, but if thrown an error we just leave this untouched
 			// If logger added in the future, percolate error
-			if err == nil && email != "" {
+			if err == nil && email != "" && recover() == nil {
 				(*recipient)[i] = email
 			}
 		}
@@ -27,7 +27,6 @@ func getEmail(path string) (string, error) {
 		return "", err
 	}
 	defer file.Close()
-
 	unMarshaller := vcard.NewDecoder(file)
 
 	card, err := unMarshaller.Decode()
