@@ -51,6 +51,9 @@ var rootCmd = &cobra.Command{
 			body += "\n\n" + signature
 		}
 
+		// Check if the recepient is a contact card, and grab first email if so
+		isContact(&to)
+
 		if len(to) > 0 && from != "" && subject != "" && body != "" && !preview {
 			err := sendEmail(to, from, subject, body, attachments)
 			if err != nil {

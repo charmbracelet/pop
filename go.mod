@@ -6,6 +6,7 @@ require (
 	github.com/charmbracelet/bubbles v0.16.2-0.20230711184233-0bdcc628fb8f
 	github.com/charmbracelet/bubbletea v0.24.3-0.20230710130425-c4c83ba757f8
 	github.com/charmbracelet/lipgloss v0.7.1
+	github.com/emersion/go-vcard v0.0.0-20230626131229-38c18b295bbd
 	github.com/muesli/mango-cobra v1.2.0
 	github.com/muesli/roff v0.1.0
 	github.com/resendlabs/resend-go v1.7.0
