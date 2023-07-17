@@ -63,7 +63,7 @@ brew install charmbracelet/tap/pop
 nix-env -iA nixpkgs.pop
 
 # Arch (btw)
-yay -S pop-bin
+yay -S pop
 ```
 
 Install with Go:
