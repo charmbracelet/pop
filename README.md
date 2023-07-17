@@ -57,12 +57,9 @@ Use a package manager:
 
 ```bash
 # macOS
-brew install pop
+brew install charmbracelet/tap/pop
 
-# Arch
-yay -S pop
-
-# Nix
+# Nix (coming soon)
 nix-env -iA nixpkgs.pop
 ```
 
