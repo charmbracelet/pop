@@ -59,7 +59,7 @@ Use a package manager:
 # macOS
 brew install charmbracelet/tap/pop
 
-# Nix (coming soon)
+# Nix
 nix-env -iA nixpkgs.pop
 
 # Arch (btw)
