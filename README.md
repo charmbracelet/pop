@@ -56,7 +56,7 @@ export POP_SIGNATURE="Sent with [Pop](https://github.com/charmbracelet/pop)!"
 Use a package manager:
 
 ```bash
-# macOS
+# macOS or Linux
 brew install pop
 
 # Nix (coming soon)
