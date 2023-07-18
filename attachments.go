@@ -40,6 +40,6 @@ func (d attachmentDelegate) Render(w io.Writer, m list.Model, index int, item li
 	}
 }
 
-func (d attachmentDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
+func (d attachmentDelegate) Update(_ tea.Msg, _ *list.Model) tea.Cmd {
 	return nil
 }

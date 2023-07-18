@@ -36,9 +36,32 @@ pop < message.md \
 
 <img width="600" src="https://stuff.charm.sh/pop/resend-x-charm.png" alt="Resend and Charm logos">
 
-To use `pop`, you will need a `RESEND_API_KEY`.
+To use `pop`, you will need a `RESEND_API_KEY` or configure an
+[`SMTP`](#smtp-configuration) host.
 
 You can grab one from: https://resend.com/api-keys.
+
+### Resend Configuration
+
+To use the resend delivery method, set the `RESEND_API_KEY` environment
+variable.
+
+```bash
+export RESEND_API_KEY=$(pass RESEND_API_KEY)
+```
+
+
+### SMTP Configuration
+
+To configure `pop` to use `SMTP`, you can set the following environment
+variables.
+
+```bash
+export POP_SMTP_HOST=smtp.gmail.com
+export POP_SMTP_PORT=587
+export POP_SMTP_USERNAME=pop@charm.sh
+export POP_SMTP_PASSWORD=hunter2
+```
 
 ### Environment
 
@@ -46,7 +69,6 @@ To avoid typing your `From: ` email address, you can also set the `POP_FROM`
 environment to pre-fill the field anytime you launch `pop`.
 
 ```bash
-export RESEND_API_KEY=$(pass RESEND_API_KEY)
 export POP_FROM=pop@charm.sh
 export POP_SIGNATURE="Sent with [Pop](https://github.com/charmbracelet/pop)!"
 ```

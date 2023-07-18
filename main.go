@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"runtime/debug"
+	"strconv"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -14,20 +15,53 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const RESEND_API_KEY = "RESEND_API_KEY"
-const UNSAFE_HTML = "POP_UNSAFE_HTML"
-const POP_FROM = "POP_FROM"
-const POP_SIGNATURE = "POP_SIGNATURE"
+// PopUnsafeHTML is the environment variable that enables unsafe HTML in the
+// email body.
+const PopUnsafeHTML = "POP_UNSAFE_HTML"
+
+// ResendAPIKey is the environment variable that enables Resend as a delivery
+// method and uses it to send the email.
+const ResendAPIKey = "RESEND_API_KEY" //nolint:gosec
+
+// PopFrom is the environment variable that sets the default "from" address.
+const PopFrom = "POP_FROM"
+
+// PopSignature is the environment variable that sets the default signature.
+const PopSignature = "POP_SIGNATURE"
+
+// PopSMTPHost is the host for the SMTP server if the user is using the SMTP delivery method.
+const PopSMTPHost = "POP_SMTP_HOST"
+
+// PopSMTPPort is the port for the SMTP server if the user is using the SMTP delivery method.
+const PopSMTPPort = "POP_SMTP_PORT"
+
+// PopSMTPUsername is the username for the SMTP server if the user is using the SMTP delivery method.
+const PopSMTPUsername = "POP_SMTP_USERNAME"
+
+// PopSMTPPassword is the password for the SMTP server if the user is using the SMTP delivery method.
+const PopSMTPPassword = "POP_SMTP_PASSWORD" //nolint:gosec
+
+// PopSMTPInsecureSkipVerify is whether or not to skip TLS verification for the
+// SMTP server if the user is using the SMTP delivery method.
+const PopSMTPInsecureSkipVerify = "POP_SMTP_INSECURE_SKIP_VERIFY"
 
 var (
-	from        string
-	to          []string
-	subject     string
-	body        string
-	attachments []string
-	preview     bool
-	unsafe      bool
-	signature   string
+	from                   string
+	to                     []string
+	cc                     []string
+	bcc                    []string
+	subject                string
+	body                   string
+	attachments            []string
+	preview                bool
+	unsafe                 bool
+	signature              string
+	smtpHost               string
+	smtpPort               int
+	smtpUsername           string
+	smtpPassword           string
+	smtpInsecureSkipVerify bool
+	resendAPIKey           string
 )
 
 var rootCmd = &cobra.Command{
@@ -35,10 +69,19 @@ var rootCmd = &cobra.Command{
 	Short: "Send emails from your terminal",
 	Long:  `Pop is a tool for sending emails from your terminal.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if os.Getenv(RESEND_API_KEY) == "" {
-			fmt.Printf("\n  %s %s %s\n\n", errorHeaderStyle.String(), inlineCodeStyle.Render(RESEND_API_KEY), "environment variable is required.")
+		var deliveryMethod DeliveryMethod
+		switch {
+		case resendAPIKey != "":
+			deliveryMethod = Resend
+		case smtpUsername != "" && smtpPassword != "":
+			deliveryMethod = SMTP
+			from = smtpUsername
+		}
+
+		if deliveryMethod == None {
+			fmt.Printf("\n  %s %s %s\n\n", errorHeaderStyle.String(), inlineCodeStyle.Render(ResendAPIKey), "environment variable is required.")
 			fmt.Printf("  %s %s\n\n", commentStyle.Render("You can grab one at"), linkStyle.Render("https://resend.com/api-keys"))
-			os.Exit(1)
+			return nil
 		}
 
 		if hasStdin() {
@@ -54,7 +97,15 @@ var rootCmd = &cobra.Command{
 		}
 
 		if len(to) > 0 && from != "" && subject != "" && body != "" && !preview {
-			err := sendEmail(to, from, subject, body, attachments)
+			var err error
+			switch deliveryMethod {
+			case SMTP:
+				err = sendSMTPEmail(to, cc, bcc, from, subject, body, attachments)
+			case Resend:
+				err = sendResendEmail(to, cc, bcc, from, subject, body, attachments)
+			default:
+				err = fmt.Errorf("unknown delivery method")
+			}
 			if err != nil {
 				cmd.SilenceUsage = true
 				cmd.SilenceErrors = true
@@ -71,14 +122,15 @@ var rootCmd = &cobra.Command{
 			Subject:     subject,
 			Text:        body,
 			Attachments: makeAttachments(attachments),
-		}))
+		}, deliveryMethod))
+
 		m, err := p.Run()
 		if err != nil {
 			return err
 		}
 		mm := m.(Model)
 		if !mm.abort {
-			fmt.Print(emailSummary(strings.Split(mm.To.Value(), TO_SEPARATOR), mm.Subject.Value()))
+			fmt.Print(emailSummary(strings.Split(mm.To.Value(), ToSeparator), mm.Subject.Value()))
 		}
 		return nil
 	},
@@ -101,6 +153,7 @@ var (
 	CommitSHA string
 )
 
+// CompletionCmd is the cobra command for generating completion scripts.
 var CompletionCmd = &cobra.Command{
 	Use:                   "completion [bash|zsh|fish|powershell]",
 	Short:                 "Generate completion script",
@@ -123,6 +176,7 @@ var CompletionCmd = &cobra.Command{
 	},
 }
 
+// ManCmd is the cobra command for the manual.
 var ManCmd = &cobra.Command{
 	Use:    "man",
 	Short:  "Generate man page",
@@ -144,19 +198,34 @@ var ManCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(CompletionCmd, ManCmd)
 
-	rootCmd.Flags().StringSliceVar(&to, "bcc", []string{}, "BCC recipients")
-	rootCmd.Flags().StringSliceVar(&to, "cc", []string{}, "CC recipients")
+	rootCmd.Flags().StringSliceVar(&bcc, "bcc", []string{}, "BCC recipients")
+	rootCmd.Flags().StringSliceVar(&cc, "cc", []string{}, "CC recipients")
 	rootCmd.Flags().StringSliceVarP(&attachments, "attach", "a", []string{}, "Email's attachments")
 	rootCmd.Flags().StringSliceVarP(&to, "to", "t", []string{}, "Recipients")
 	rootCmd.Flags().StringVarP(&body, "body", "b", "", "Email's contents")
-	envFrom := os.Getenv(POP_FROM)
-	rootCmd.Flags().StringVarP(&from, "from", "f", envFrom, "Email's sender "+commentStyle.Render("($"+POP_FROM+")"))
+	envFrom := os.Getenv(PopFrom)
+	rootCmd.Flags().StringVarP(&from, "from", "f", envFrom, "Email's sender"+commentStyle.Render("($"+PopFrom+")"))
 	rootCmd.Flags().StringVarP(&subject, "subject", "s", "", "Email's subject")
-	rootCmd.Flags().BoolVarP(&preview, "preview", "p", false, "Whether to preview the email before sending")
-	envUnsafe := os.Getenv(UNSAFE_HTML) == "true"
+	rootCmd.Flags().BoolVar(&preview, "preview", false, "Whether to preview the email before sending")
+	envUnsafe := os.Getenv(PopUnsafeHTML) == "true"
 	rootCmd.Flags().BoolVarP(&unsafe, "unsafe", "u", envUnsafe, "Whether to allow unsafe HTML in the email body, also enable some extra markdown features (Experimental)")
-	envSignature := os.Getenv("POP_SIGNATURE")
-	rootCmd.Flags().StringVarP(&signature, "signature", "x", envSignature, "Signature to display at the end of the email. "+commentStyle.Render("($"+POP_SIGNATURE+")"))
+	envSignature := os.Getenv(PopSignature)
+	rootCmd.Flags().StringVarP(&signature, "signature", "x", envSignature, "Signature to display at the end of the email."+commentStyle.Render("($"+PopSignature+")"))
+	envSMTPHost := os.Getenv(PopSMTPHost)
+	rootCmd.Flags().StringVarP(&smtpHost, "smtp.host", "H", envSMTPHost, "Host of the SMTP server"+commentStyle.Render("($"+PopSMTPHost+")"))
+	envSMTPPort, _ := strconv.Atoi(os.Getenv(PopSMTPPort))
+	if envSMTPPort == 0 {
+		envSMTPPort = 587
+	}
+	rootCmd.Flags().IntVarP(&smtpPort, "smtp.port", "P", envSMTPPort, "Port of the SMTP server"+commentStyle.Render("($"+PopSMTPPort+")"))
+	envSMTPUsername := os.Getenv(PopSMTPUsername)
+	rootCmd.Flags().StringVarP(&smtpUsername, "smtp.username", "U", envSMTPUsername, "Username of the SMTP server"+commentStyle.Render("($"+PopSMTPUsername+")"))
+	envSMTPPassword := os.Getenv(PopSMTPPassword)
+	rootCmd.Flags().StringVarP(&smtpPassword, "smtp.password", "p", envSMTPPassword, "Password of the SMTP server"+commentStyle.Render("($"+PopSMTPPassword+")"))
+	envInsecureSkipVerify := os.Getenv(PopSMTPInsecureSkipVerify) == "true"
+	rootCmd.Flags().BoolVarP(&smtpInsecureSkipVerify, "smtp.insecure", "i", envInsecureSkipVerify, "Skip TLS verification with SMTP server"+commentStyle.Render("($"+PopSMTPInsecureSkipVerify+")"))
+	envResendAPIKey := os.Getenv(ResendAPIKey)
+	rootCmd.Flags().StringVarP(&resendAPIKey, "resend.key", "r", envResendAPIKey, "API key for the Resend.com"+commentStyle.Render("($"+ResendAPIKey+")"))
 
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 

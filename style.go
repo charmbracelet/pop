@@ -27,7 +27,7 @@ var (
 
 	errorHeaderStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#F1F1F1")).Background(lipgloss.Color("#FF5F87")).Bold(true).Padding(0, 1).SetString("ERROR")
 	errorStyle       = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF5F87"))
-	commentStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("#757575"))
+	commentStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("#757575")).PaddingLeft(1)
 
 	sendButtonActiveStyle   = lipgloss.NewStyle().Background(accentColor).Foreground(yellowColor).Padding(0, 2)
 	sendButtonInactiveStyle = lipgloss.NewStyle().Background(darkGrayColor).Foreground(lightGrayColor).Padding(0, 2)
