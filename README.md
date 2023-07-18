@@ -56,8 +56,8 @@ export POP_SIGNATURE="Sent with [Pop](https://github.com/charmbracelet/pop)!"
 Use a package manager:
 
 ```bash
-# macOS
-brew install charmbracelet/tap/pop
+# Homebrew (macOS/Linux)
+brew install pop
 
 # Nix (coming soon)
 nix-env -iA nixpkgs.pop
