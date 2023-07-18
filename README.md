@@ -56,8 +56,8 @@ export POP_SIGNATURE="Sent with [Pop](https://github.com/charmbracelet/pop)!"
 Use a package manager:
 
 ```bash
-# macOS
-brew install charmbracelet/tap/pop
+# macOS or Linux
+brew install pop
 
 # Nix (coming soon)
 nix-env -iA nixpkgs.pop
@@ -78,9 +78,9 @@ Or download a binary from the [releases](https://github.com/charmbracelet/pop/re
 
 Pop can be combined with other tools to create powerful email pipelines, such as:
 
-* [`charmbracelet/mods`](https://github.com/charmbracelet/mods)
-* [`charmbracelet/gum`](https://github.com/charmbracelet/gum)
-* [`maaslalani/invoice`](https://github.com/maaslalani/invoice)
+- [`charmbracelet/mods`](https://github.com/charmbracelet/mods)
+- [`charmbracelet/gum`](https://github.com/charmbracelet/gum)
+- [`maaslalani/invoice`](https://github.com/maaslalani/invoice)
 
 ### Mods
 
@@ -97,7 +97,7 @@ pop <<< '$(mods -f "Explain why CLIs are awesome")' \
 
 <img width="600" src="https://vhs.charm.sh/vhs-1O3zo8Nsi2kPVW3vOBw4WH.gif" alt="Generate email with mods and send email with pop.">
 
-* [`charmbracelet/mods`](https://github.com/charmbracelet/mods)
+- [`charmbracelet/mods`](https://github.com/charmbracelet/mods)
 
 ### Gum
 
@@ -110,7 +110,7 @@ pop --from $(gum choose "vt52@charm.sh" "vt78@charm.sh" "vt100@charm.sh")
 
 <img width="600" src="https://vhs.charm.sh/vhs-Et9ooHB6L1XVWDL9U1TfI.gif" alt="Select contact information with gum and send email with pop.">
 
-* [`charmbracelet/gum`](https://github.com/charmbracelet/gum)
+- [`charmbracelet/gum`](https://github.com/charmbracelet/gum)
 
 ### Invoice
 
@@ -124,7 +124,7 @@ pop --attach $FILENAME --body "See attached invoice."
 
 <img width="600" src="https://vhs.charm.sh/vhs-4TRyv82BBDKOutgWdvyshr.gif" alt="Generate invoice with invoice and attach file and send email with pop.">
 
-* [`maaslalani/invoice`](https://github.com/maaslalani/invoice)
+- [`maaslalani/invoice`](https://github.com/maaslalani/invoice)
 
 ## License
 
