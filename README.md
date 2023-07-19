@@ -126,10 +126,6 @@ pop --attach $FILENAME --body "See attached invoice."
 
 - [`maaslalani/invoice`](https://github.com/maaslalani/invoice)
 
-## License
-
-[MIT](https://github.com/charmbracelet/pop/blob/main/LICENSE)
-
 ## Feedback
 
 We’d love to hear your thoughts on this project. Feel free to drop us a note!
@@ -140,7 +136,7 @@ We’d love to hear your thoughts on this project. Feel free to drop us a note!
 
 ## License
 
-[MIT](https://github.com/charmbracelet/pop/raw/main/LICENSE)
+[MIT](https://github.com/charmbracelet/pop/blob/main/LICENSE)
 
 ---
 
