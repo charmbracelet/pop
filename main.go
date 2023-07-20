@@ -15,6 +15,7 @@ import (
 )
 
 const RESEND_API_KEY = "RESEND_API_KEY"
+const UNSAFE_HTML = "UNSAFE_HTML"
 const POP_FROM = "POP_FROM"
 const POP_SIGNATURE = "POP_SIGNATURE"
 
@@ -25,6 +26,7 @@ var (
 	body        string
 	attachments []string
 	preview     bool
+	unsafe      bool
 	signature   string
 )
 
@@ -151,6 +153,8 @@ func init() {
 	rootCmd.Flags().StringVarP(&from, "from", "f", envFrom, "Email's sender "+commentStyle.Render("($"+POP_FROM+")"))
 	rootCmd.Flags().StringVarP(&subject, "subject", "s", "", "Email's subject")
 	rootCmd.Flags().BoolVarP(&preview, "preview", "p", false, "Whether to preview the email before sending")
+	unsafe := os.Getenv(UNSAFE_HTML) == "true"
+	rootCmd.Flags().BoolVarP(&unsafe, "unsafe", "u", false, "Whether to allow unsafe HTML in the email body, also enable some extra markdown features (Experimental)")
 	envSignature := os.Getenv("POP_SIGNATURE")
 	rootCmd.Flags().StringVarP(&signature, "signature", "x", envSignature, "Signature to display at the end of the email. "+commentStyle.Render("($"+POP_SIGNATURE+")"))
 

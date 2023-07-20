@@ -9,6 +9,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/resendlabs/resend-go"
 	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
+	renderer "github.com/yuin/goldmark/renderer/html"
 )
 
 const TO_SEPARATOR = ","
@@ -41,7 +43,21 @@ func sendEmail(to []string, from, subject, body string, paths []string) error {
 
 	html := bytes.NewBufferString("")
 	// If the conversion fails, we'll simply send the plain-text body.
-	_ = goldmark.Convert([]byte(body), html)
+	if unsafe {
+		markdown := goldmark.New(
+			goldmark.WithRendererOptions(
+				renderer.WithUnsafe(),
+			),
+			goldmark.WithExtensions(
+				extension.Strikethrough,
+				extension.Table,
+				extension.Linkify,
+			),
+		)
+		_ = markdown.Convert([]byte(body), html)
+	} else {
+		_ = goldmark.Convert([]byte(body), html)
+	}
 
 	request := &resend.SendEmailRequest{
 		From:        from,
