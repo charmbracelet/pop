@@ -10,7 +10,7 @@ require (
 	github.com/muesli/roff v0.1.0
 	github.com/resendlabs/resend-go v1.7.0
 	github.com/spf13/cobra v1.7.0
-	github.com/yuin/goldmark v1.5.4
+	github.com/yuin/goldmark v1.5.5
 	golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
 )
 
