@@ -40,6 +40,10 @@ To use `pop`, you will need a `RESEND_API_KEY`.
 
 You can grab one from: https://resend.com/api-keys.
 
+> **Note**:
+> If you use a resend account without a custom domain the POP_FROM value should be "onboarding@resend.dev"
+
+
 ### Environment
 
 To avoid typing your `From: ` email address, you can also set the `POP_FROM`
