@@ -63,7 +63,7 @@ brew install pop
 nix-env -iA nixpkgs.pop
 
 # Arch (btw)
-yay -S pop
+yay -S charm-pop-bin
 ```
 
 Install with Go:
