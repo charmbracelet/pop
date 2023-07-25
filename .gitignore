@@ -3,3 +3,5 @@
 dist
 completions
 manpages
+*.vcard
+*.vcf
