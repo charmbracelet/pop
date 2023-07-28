@@ -41,6 +41,9 @@ const PopSMTPUsername = "POP_SMTP_USERNAME"
 // PopSMTPPassword is the password for the SMTP server if the user is using the SMTP delivery method.
 const PopSMTPPassword = "POP_SMTP_PASSWORD" //nolint:gosec
 
+// PopSMTPEncryption is the encryption type for the SMTP server if the user is using the SMTP delivery method.
+const PopSMTPEncryption = "POP_SMTP_ENCRYPTION" //nolint:gosec
+
 // PopSMTPInsecureSkipVerify is whether or not to skip TLS verification for the
 // SMTP server if the user is using the SMTP delivery method.
 const PopSMTPInsecureSkipVerify = "POP_SMTP_INSECURE_SKIP_VERIFY"
@@ -60,6 +63,7 @@ var (
 	smtpPort               int
 	smtpUsername           string
 	smtpPassword           string
+	smtpEncryption         string
 	smtpInsecureSkipVerify bool
 	resendAPIKey           string
 )
@@ -222,6 +226,8 @@ func init() {
 	rootCmd.Flags().StringVarP(&smtpUsername, "smtp.username", "U", envSMTPUsername, "Username of the SMTP server"+commentStyle.Render("($"+PopSMTPUsername+")"))
 	envSMTPPassword := os.Getenv(PopSMTPPassword)
 	rootCmd.Flags().StringVarP(&smtpPassword, "smtp.password", "p", envSMTPPassword, "Password of the SMTP server"+commentStyle.Render("($"+PopSMTPPassword+")"))
+	envSMTPEncryption := os.Getenv(PopSMTPEncryption)
+	rootCmd.Flags().StringVarP(&smtpEncryption, "smtp.encryption", "e", envSMTPEncryption, "Encryption type of the SMTP server"+commentStyle.Render("($"+PopSMTPEncryption+")"))
 	envInsecureSkipVerify := os.Getenv(PopSMTPInsecureSkipVerify) == "true"
 	rootCmd.Flags().BoolVarP(&smtpInsecureSkipVerify, "smtp.insecure", "i", envInsecureSkipVerify, "Skip TLS verification with SMTP server"+commentStyle.Render("($"+PopSMTPInsecureSkipVerify+")"))
 	envResendAPIKey := os.Getenv(ResendAPIKey)

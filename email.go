@@ -77,7 +77,12 @@ func sendSMTPEmail(to, cc, bcc []string, from, subject, body string, attachments
 		}
 	}
 
-	server.Encryption = mail.EncryptionSTARTTLS
+	if strings.EqualFold(smtpEncryption, "ssl") {
+		server.Encryption = mail.EncryptionSSLTLS
+	} else {
+		server.Encryption = mail.EncryptionSTARTTLS
+	}
+
 	server.KeepAlive = false
 	server.ConnectTimeout = 10 * time.Second
 	server.SendTimeout = 10 * time.Second
