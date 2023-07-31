@@ -77,9 +77,12 @@ func sendSMTPEmail(to, cc, bcc []string, from, subject, body string, attachments
 		}
 	}
 
-	if strings.EqualFold(smtpEncryption, "ssl") {
+	switch strings.ToLower(smtpEncryption) {
+	case "ssl":
 		server.Encryption = mail.EncryptionSSLTLS
-	} else {
+	case "none":
+		server.Encryption = mail.EncryptionNone
+	default:
 		server.Encryption = mail.EncryptionSTARTTLS
 	}
 

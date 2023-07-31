@@ -227,7 +227,7 @@ func init() {
 	envSMTPPassword := os.Getenv(PopSMTPPassword)
 	rootCmd.Flags().StringVarP(&smtpPassword, "smtp.password", "p", envSMTPPassword, "Password of the SMTP server"+commentStyle.Render("($"+PopSMTPPassword+")"))
 	envSMTPEncryption := os.Getenv(PopSMTPEncryption)
-	rootCmd.Flags().StringVarP(&smtpEncryption, "smtp.encryption", "e", envSMTPEncryption, "Encryption type of the SMTP server"+commentStyle.Render("($"+PopSMTPEncryption+")"))
+	rootCmd.Flags().StringVarP(&smtpEncryption, "smtp.encryption", "e", envSMTPEncryption, "Encryption type of the SMTP server (starttls, ssl, or none)"+commentStyle.Render("($"+PopSMTPEncryption+")"))
 	envInsecureSkipVerify := os.Getenv(PopSMTPInsecureSkipVerify) == "true"
 	rootCmd.Flags().BoolVarP(&smtpInsecureSkipVerify, "smtp.insecure", "i", envInsecureSkipVerify, "Skip TLS verification with SMTP server"+commentStyle.Render("($"+PopSMTPInsecureSkipVerify+")"))
 	envResendAPIKey := os.Getenv(ResendAPIKey)
