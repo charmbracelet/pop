@@ -13,10 +13,11 @@ import (
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/x/exp/ordered"
 	"github.com/resendlabs/resend-go"
-	"golang.org/x/exp/constraints"
 )
 
+// State is the current state of the application.
 type State int
 
 const (
@@ -30,9 +31,25 @@ const (
 	sendingEmail
 )
 
+// DeliveryMethod is the method of delivery for the email.
+type DeliveryMethod int
+
+const (
+	// None is the default delivery method.
+	None DeliveryMethod = iota
+	// Resend uses https://resend.com to send an email.
+	Resend
+	// SMTP uses an SMTP server to send an email.
+	SMTP
+)
+
+// Model is Pop's application model.
 type Model struct {
 	// state represents the current state of the application.
 	state State
+
+	// DeliveryMethod is whether we are using DeliveryMethod or Resend.
+	DeliveryMethod DeliveryMethod
 
 	// From represents the sender's email address.
 	From textinput.Model
@@ -48,6 +65,9 @@ type Model struct {
 	// This is a list of file paths which are picked with a filepicker.
 	Attachments list.Model
 
+	Cc  textinput.Model
+	Bcc textinput.Model
+
 	// filepicker is used to pick file attachments.
 	filepicker     filepicker.Model
 	loadingSpinner spinner.Model
@@ -58,7 +78,8 @@ type Model struct {
 	err            error
 }
 
-func NewModel(defaults resend.SendEmailRequest) Model {
+// NewModel returns a new model for the application.
+func NewModel(defaults resend.SendEmailRequest, deliveryMethod DeliveryMethod) Model {
 	from := textinput.New()
 	from.Prompt = "From "
 	from.Placeholder = "me@example.com"
@@ -76,7 +97,7 @@ func NewModel(defaults resend.SendEmailRequest) Model {
 	to.PlaceholderStyle = placeholderStyle
 	to.TextStyle = textStyle
 	to.Placeholder = "you@example.com"
-	to.SetValue(strings.Join(defaults.To, TO_SEPARATOR))
+	to.SetValue(strings.Join(defaults.To, ToSeparator))
 
 	subject := textinput.New()
 	subject.Prompt = "Subject "
@@ -155,6 +176,7 @@ func NewModel(defaults resend.SendEmailRequest) Model {
 		help:           help.New(),
 		keymap:         DefaultKeybinds(),
 		loadingSpinner: loadingSpinner,
+		DeliveryMethod: deliveryMethod,
 	}
 
 	m.focusActiveInput()
@@ -162,6 +184,7 @@ func NewModel(defaults resend.SendEmailRequest) Model {
 	return m
 }
 
+// Init initializes the model.
 func (m Model) Init() tea.Cmd {
 	return tea.Batch(
 		m.From.Cursor.BlinkCmd(),
@@ -176,6 +199,7 @@ func clearErrAfter(d time.Duration) tea.Cmd {
 	})
 }
 
+// Update is the update loop for the model.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case sendEmailSuccessMsg:
@@ -243,7 +267,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, m.filepicker.Init()
 		case key.Matches(msg, m.keymap.Unattach):
 			m.Attachments.RemoveItem(m.Attachments.Index())
-			m.Attachments.SetHeight(max(len(m.Attachments.Items()), 1) + 2)
+			m.Attachments.SetHeight(ordered.Max(len(m.Attachments.Items()), 1) + 2)
 		case key.Matches(msg, m.keymap.Quit):
 			m.quitting = true
 			m.abort = true
@@ -329,6 +353,7 @@ func (m *Model) focusActiveInput() {
 	}
 }
 
+// View displays the application.
 func (m Model) View() string {
 	if m.quitting {
 		return ""
@@ -370,11 +395,4 @@ func (m Model) View() string {
 	}
 
 	return paddedStyle.Render(s.String())
-}
-
-func max[T constraints.Ordered](a, b T) T {
-	if a > b {
-		return a
-	}
-	return b
 }

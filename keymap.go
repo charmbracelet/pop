@@ -13,6 +13,7 @@ type KeyMap struct {
 	Quit      key.Binding
 }
 
+// DefaultKeybinds returns the default key bindings for the application.
 func DefaultKeybinds() KeyMap {
 	return KeyMap{
 		NextInput: key.NewBinding(
@@ -49,6 +50,7 @@ func DefaultKeybinds() KeyMap {
 	}
 }
 
+// ShortHelp returns the key bindings for the short help screen.
 func (k KeyMap) ShortHelp() []key.Binding {
 	return []key.Binding{
 		k.NextInput,
@@ -59,6 +61,7 @@ func (k KeyMap) ShortHelp() []key.Binding {
 	}
 }
 
+// FullHelp returns the key bindings for the full help screen.
 func (k KeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.NextInput, k.Send, k.Attach, k.Unattach, k.Quit},

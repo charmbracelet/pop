@@ -2,18 +2,23 @@ package main
 
 import (
 	"bytes"
+	"crypto/tls"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/resendlabs/resend-go"
+	mail "github.com/xhit/go-simple-mail/v2"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
 	renderer "github.com/yuin/goldmark/renderer/html"
 )
 
-const TO_SEPARATOR = ","
+// ToSeparator is the separator used to split the To, Cc, and Bcc fields.
+const ToSeparator = ","
 
 // sendEmailSuccessMsg is the tea.Msg handled by Bubble Tea when the email has
 // been sent successfully.
@@ -30,7 +35,18 @@ func (m Model) sendEmailCmd() tea.Cmd {
 		for i, a := range m.Attachments.Items() {
 			attachments[i] = a.FilterValue()
 		}
-		err := sendEmail(strings.Split(m.To.Value(), TO_SEPARATOR), m.From.Value(), m.Subject.Value(), m.Body.Value(), attachments)
+		var err error
+		to := strings.Split(m.To.Value(), ToSeparator)
+		cc := strings.Split(m.Cc.Value(), ToSeparator)
+		bcc := strings.Split(m.Bcc.Value(), ToSeparator)
+		switch m.DeliveryMethod {
+		case SMTP:
+			err = sendSMTPEmail(to, cc, bcc, m.From.Value(), m.Subject.Value(), m.Body.Value(), attachments)
+		case Resend:
+			err = sendResendEmail(to, cc, bcc, m.From.Value(), m.Subject.Value(), m.Body.Value(), attachments)
+		default:
+			err = errors.New("[ERROR]: unknown delivery method")
+		}
 		if err != nil {
 			return sendEmailFailureMsg(err)
 		}
@@ -38,8 +54,80 @@ func (m Model) sendEmailCmd() tea.Cmd {
 	}
 }
 
-func sendEmail(to []string, from, subject, body string, paths []string) error {
-	client := resend.NewClient(os.Getenv(RESEND_API_KEY))
+const gmailSuffix = "@gmail.com"
+const gmailSMTPHost = "smtp.gmail.com"
+const gmailSMTPPort = 587
+
+func sendSMTPEmail(to, cc, bcc []string, from, subject, body string, attachments []string) error {
+	server := mail.NewSMTPClient()
+
+	var err error
+	server.Username = smtpUsername
+	server.Password = smtpPassword
+	server.Host = smtpHost
+	server.Port = smtpPort
+
+	// Set defaults for gmail.
+	if strings.HasSuffix(server.Username, gmailSuffix) {
+		if server.Port == 0 {
+			server.Port = gmailSMTPPort
+		}
+		if server.Host == "" {
+			server.Host = gmailSMTPHost
+		}
+	}
+
+	switch strings.ToLower(smtpEncryption) {
+	case "ssl":
+		server.Encryption = mail.EncryptionSSLTLS
+	case "none":
+		server.Encryption = mail.EncryptionNone
+	default:
+		server.Encryption = mail.EncryptionSTARTTLS
+	}
+
+	server.KeepAlive = false
+	server.ConnectTimeout = 10 * time.Second
+	server.SendTimeout = 10 * time.Second
+	server.TLSConfig = &tls.Config{
+		InsecureSkipVerify: smtpInsecureSkipVerify, //nolint:gosec
+		ServerName:         server.Host,
+	}
+
+	smtpClient, err := server.Connect()
+
+	if err != nil {
+		return err
+	}
+
+	email := mail.NewMSG()
+	email.SetFrom(from).
+		AddTo(to...).
+		AddCc(cc...).
+		AddBcc(bcc...).
+		SetSubject(subject)
+
+	html := bytes.NewBufferString("")
+	convertErr := goldmark.Convert([]byte(body), html)
+
+	if convertErr != nil {
+		email.SetBody(mail.TextPlain, body)
+	} else {
+		email.SetBody(mail.TextHTML, html.String())
+	}
+
+	for _, a := range attachments {
+		email.Attach(&mail.File{
+			FilePath: a,
+			Name:     filepath.Base(a),
+		})
+	}
+
+	return email.Send(smtpClient)
+}
+
+func sendResendEmail(to, cc, bcc []string, from, subject, body string, attachments []string) error {
+	client := resend.NewClient(resendAPIKey)
 
 	html := bytes.NewBufferString("")
 	// If the conversion fails, we'll simply send the plain-text body.
@@ -62,10 +150,12 @@ func sendEmail(to []string, from, subject, body string, paths []string) error {
 	request := &resend.SendEmailRequest{
 		From:        from,
 		To:          to,
+		Cc:          cc,
+		Bcc:         bcc,
 		Subject:     subject,
 		Html:        html.String(),
 		Text:        body,
-		Attachments: makeAttachments(paths),
+		Attachments: makeAttachments(attachments),
 	}
 
 	_, err := client.Emails.Send(request)
