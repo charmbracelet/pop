@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -85,7 +86,9 @@ var rootCmd = &cobra.Command{
 		if deliveryMethod == None {
 			fmt.Printf("\n  %s %s %s\n\n", errorHeaderStyle.String(), inlineCodeStyle.Render(ResendAPIKey), "environment variable is required.")
 			fmt.Printf("  %s %s\n\n", commentStyle.Render("You can grab one at"), linkStyle.Render("https://resend.com/api-keys"))
-			return nil
+			cmd.SilenceUsage = true
+			cmd.SilenceErrors = true
+			return errors.New("missing required environment variable")
 		}
 
 		if hasStdin() {
