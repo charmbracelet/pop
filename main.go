@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"runtime/debug"
 	"strconv"
 	"strings"
@@ -41,6 +42,10 @@ const PopSMTPUsername = "POP_SMTP_USERNAME"
 
 // PopSMTPPassword is the password for the SMTP server if the user is using the SMTP delivery method.
 const PopSMTPPassword = "POP_SMTP_PASSWORD" //nolint:gosec
+
+// PopSMTPPasswordCommand is the command to execute to retrieve the SMTP
+// password.
+const PopSMTPPasswordCommand = "POP_SMTP_PASSWORD_COMMAND" //nolint:gosec
 
 // PopSMTPEncryption is the encryption type for the SMTP server if the user is using the SMTP delivery method.
 const PopSMTPEncryption = "POP_SMTP_ENCRYPTION" //nolint:gosec
@@ -204,8 +209,12 @@ func init() {
 	rootCmd.Flags().IntVarP(&smtpPort, "smtp.port", "P", envSMTPPort, "Port of the SMTP server"+commentStyle.Render("($"+PopSMTPPort+")"))
 	envSMTPUsername := os.Getenv(PopSMTPUsername)
 	rootCmd.Flags().StringVarP(&smtpUsername, "smtp.username", "U", envSMTPUsername, "Username of the SMTP server"+commentStyle.Render("($"+PopSMTPUsername+")"))
-	envSMTPPassword := os.Getenv(PopSMTPPassword)
-	rootCmd.Flags().StringVarP(&smtpPassword, "smtp.password", "p", envSMTPPassword, "Password of the SMTP server"+commentStyle.Render("($"+PopSMTPPassword+")"))
+	password, err := getPasswordFromEnvironment()
+	if err != nil {
+		fmt.Println(errorStyle.Render(err.Error()))
+		os.Exit(1)
+	}
+	rootCmd.Flags().StringVarP(&smtpPassword, "smtp.password", "p", password, "Password of the SMTP server"+commentStyle.Render("($"+PopSMTPPassword+")"))
 	envSMTPEncryption := os.Getenv(PopSMTPEncryption)
 	rootCmd.Flags().StringVarP(&smtpEncryption, "smtp.encryption", "e", envSMTPEncryption, "Encryption type of the SMTP server (starttls, ssl, or none)"+commentStyle.Render("($"+PopSMTPEncryption+")"))
 	envInsecureSkipVerify := os.Getenv(PopSMTPInsecureSkipVerify) == "true"
@@ -227,6 +236,25 @@ func init() {
 		}
 	}
 	rootCmd.Version = Version
+}
+
+func getPasswordFromEnvironment() (string, error) {
+	password := os.Getenv(PopSMTPPassword)
+	if password != "" {
+		return password, nil
+	}
+
+	passwordCommand := os.Getenv(PopSMTPPasswordCommand)
+	if passwordCommand != "" {
+		cmd := exec.Command("sh", "-c", passwordCommand)
+		out, err := cmd.Output()
+		if err != nil {
+			return "", errors.New("failed to get password from command: " + passwordCommand)
+		}
+		return strings.TrimSpace(string(out)), nil
+	}
+
+	return "", nil
 }
 
 func main() {

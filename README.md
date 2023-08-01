@@ -60,7 +60,7 @@ variables.
 export POP_SMTP_HOST=smtp.gmail.com
 export POP_SMTP_PORT=587
 export POP_SMTP_USERNAME=pop@charm.sh
-export POP_SMTP_PASSWORD=hunter2
+export POP_SMTP_PASSWORD=hunter2 # or export POP_SMTP_PASSWORD_COMMAND="pass email"
 ```
 
 ### Environment
