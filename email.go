@@ -126,7 +126,7 @@ func sendSMTPEmail(to, cc, bcc []string, from, subject, body string, attachments
 	return email.Send(smtpClient)
 }
 
-func sendResendEmail(to, cc, bcc []string, from, subject, body string, attachments []string) error {
+func sendResendEmail(to, _, _ []string, from, subject, body string, attachments []string) error {
 	client := resend.NewClient(resendAPIKey)
 
 	html := bytes.NewBufferString("")
@@ -150,8 +150,6 @@ func sendResendEmail(to, cc, bcc []string, from, subject, body string, attachmen
 	request := &resend.SendEmailRequest{
 		From:        from,
 		To:          to,
-		Cc:          cc,
-		Bcc:         bcc,
 		Subject:     subject,
 		Html:        html.String(),
 		Text:        body,
