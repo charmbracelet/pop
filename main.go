@@ -157,29 +157,6 @@ var (
 	CommitSHA string
 )
 
-// CompletionCmd is the cobra command for generating completion scripts.
-var CompletionCmd = &cobra.Command{
-	Use:                   "completion [bash|zsh|fish|powershell]",
-	Short:                 "Generate completion script",
-	Long:                  `To load completions`,
-	DisableFlagsInUseLine: true,
-	ValidArgs:             []string{"bash", "zsh", "fish", "powershell"},
-	Args:                  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		switch args[0] {
-		case "bash":
-			return rootCmd.GenBashCompletion(os.Stdout)
-		case "zsh":
-			return rootCmd.GenZshCompletion(os.Stdout)
-		case "fish":
-			return rootCmd.GenFishCompletion(os.Stdout, true)
-		case "powershell":
-			return rootCmd.GenPowerShellCompletion(os.Stdout)
-		}
-		return nil
-	},
-}
-
 // ManCmd is the cobra command for the manual.
 var ManCmd = &cobra.Command{
 	Use:    "man",
@@ -187,7 +164,7 @@ var ManCmd = &cobra.Command{
 	Long:   `To generate the man page`,
 	Args:   cobra.NoArgs,
 	Hidden: true,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		page, err := mcobra.NewManPage(1, rootCmd) // .
 		if err != nil {
 			return err
@@ -200,7 +177,7 @@ var ManCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(CompletionCmd, ManCmd)
+	rootCmd.AddCommand(ManCmd)
 
 	rootCmd.Flags().StringSliceVar(&bcc, "bcc", []string{}, "BCC recipients")
 	rootCmd.Flags().StringSliceVar(&cc, "cc", []string{}, "CC recipients")
