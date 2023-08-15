@@ -41,6 +41,8 @@ const (
 	Resend
 	// SMTP uses an SMTP server to send an email.
 	SMTP
+	// Many is set when multiple delivery methods are configured.
+	Many
 )
 
 // Model is Pop's application model.

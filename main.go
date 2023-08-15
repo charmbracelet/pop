@@ -76,6 +76,8 @@ var rootCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var deliveryMethod DeliveryMethod
 		switch {
+		case resendAPIKey != "" && smtpUsername != "" && smtpPassword != "":
+			deliveryMethod = Many
 		case resendAPIKey != "":
 			deliveryMethod = Resend
 		case smtpUsername != "" && smtpPassword != "":
@@ -83,6 +85,17 @@ var rootCmd = &cobra.Command{
 			from = smtpUsername
 		}
 
+		if deliveryMethod == Many {
+			fmt.Printf("\n  Multiple sending methods are configured.\n")
+			fmt.Printf(
+				"\n  Please have either %s or %s environment variables set.\n\n",
+				inlineCodeStyle.Render(ResendAPIKey),
+				inlineCodeStyle.Render("POP_SMPT_*"),
+			)
+			cmd.SilenceUsage = true
+			cmd.SilenceErrors = true
+			return errors.New("multiple environment variables set")
+		}
 		if deliveryMethod == None {
 			fmt.Printf("\n  %s %s %s\n\n", errorHeaderStyle.String(), inlineCodeStyle.Render(ResendAPIKey), "environment variable is required.")
 			fmt.Printf("  %s %s\n\n", commentStyle.Render("You can grab one at"), linkStyle.Render("https://resend.com/api-keys"))
