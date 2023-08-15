@@ -86,7 +86,10 @@ var rootCmd = &cobra.Command{
 		}
 
 		if deliveryMethod == Many {
-			fmt.Printf("\n  Multiple sending methods are configured.\n")
+			fmt.Printf(
+				"\n  %s Multiple sending methods are configured.\n",
+				errorHeaderStyle.String(),
+			)
 			fmt.Printf(
 				"\n  Please have either %s or %s environment variables set.\n\n",
 				inlineCodeStyle.Render(ResendAPIKey),
