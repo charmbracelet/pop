@@ -77,7 +77,7 @@ var rootCmd = &cobra.Command{
 		var deliveryMethod DeliveryMethod
 		switch {
 		case resendAPIKey != "" && smtpUsername != "" && smtpPassword != "":
-			deliveryMethod = Many
+			deliveryMethod = Unknown
 		case resendAPIKey != "":
 			deliveryMethod = Resend
 		case smtpUsername != "" && smtpPassword != "":
@@ -85,26 +85,20 @@ var rootCmd = &cobra.Command{
 			from = smtpUsername
 		}
 
-		if deliveryMethod == Many {
-			fmt.Printf(
-				"\n  %s Multiple sending methods are configured.\n",
-				errorHeaderStyle.String(),
-			)
-			fmt.Printf(
-				"\n  Please have either %s or %s environment variables set.\n\n",
-				inlineCodeStyle.Render(ResendAPIKey),
-				inlineCodeStyle.Render("POP_SMPT_*"),
-			)
-			cmd.SilenceUsage = true
-			cmd.SilenceErrors = true
-			return errors.New("multiple environment variables set")
-		}
-		if deliveryMethod == None {
+		switch deliveryMethod {
+		case None:
 			fmt.Printf("\n  %s %s %s\n\n", errorHeaderStyle.String(), inlineCodeStyle.Render(ResendAPIKey), "environment variable is required.")
 			fmt.Printf("  %s %s\n\n", commentStyle.Render("You can grab one at"), linkStyle.Render("https://resend.com/api-keys"))
 			cmd.SilenceUsage = true
 			cmd.SilenceErrors = true
 			return errors.New("missing required environment variable")
+		case Unknown:
+			fmt.Printf("\n  %s Unknown delivery method.\n", errorHeaderStyle.String())
+			fmt.Printf("\n  You have set both %s and %s delivery methods.", inlineCodeStyle.Render(ResendAPIKey), inlineCodeStyle.Render("POP_SMPT_*"))
+			fmt.Printf("\n  Set only one of these environment variables.\n\n")
+			cmd.SilenceUsage = true
+			cmd.SilenceErrors = true
+			return errors.New("unknown delivery method")
 		}
 
 		if hasStdin() {
