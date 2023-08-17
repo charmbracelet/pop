@@ -41,6 +41,9 @@ const (
 	Resend
 	// SMTP uses an SMTP server to send an email.
 	SMTP
+	// Unknown is set when the user has not chosen a single delivery method.
+	// i.e. multiple delivery methods are set.
+	Unknown
 )
 
 // Model is Pop's application model.
