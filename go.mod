@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/charmbracelet/bubbles v0.16.2-0.20230711184233-0bdcc628fb8f
 	github.com/charmbracelet/bubbletea v0.24.3-0.20230710130425-c4c83ba757f8
-	github.com/charmbracelet/lipgloss v0.7.1
+	github.com/charmbracelet/lipgloss v0.8.0
 	github.com/charmbracelet/x/exp/ordered v0.0.0-20230707174939-50fb4f48b5b3
 	github.com/muesli/mango-cobra v1.2.0
 	github.com/muesli/roff v0.1.0
