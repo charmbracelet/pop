@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -48,6 +49,11 @@ func (m Model) sendEmailCmd() tea.Cmd {
 			err = errors.New("[ERROR]: unknown delivery method")
 		}
 		if err != nil {
+			// Store the body if the email fails to send
+			path, storeErr := storeEmailBody(m.Body.Value())
+			if storeErr == nil {
+				err = fmt.Errorf("%w\nStored a copy of the email body at %s", err, path)
+			}
 			return sendEmailFailureMsg(err)
 		}
 		return sendEmailSuccessMsg{}
@@ -182,4 +188,40 @@ func makeAttachments(paths []string) []resend.Attachment {
 	}
 
 	return attachments
+}
+
+// Store the email body in /tmp. Returns a path to the file created.
+func storeEmailBody(body string) (string, error) {
+	dir := "/tmp/pop"
+
+	err := os.MkdirAll(dir, 0700)
+	if err != nil {
+		return "", fmt.Errorf("creating %s: %w", dir, err)
+	}
+
+	curr := time.Now()
+	fileName := fmt.Sprintf("%d-%d-%d-%d", curr.Year(), curr.Month(), curr.Day(), secondsSinceDayStart(curr))
+	fullPath := filepath.Join(dir, fileName)
+
+	file, err := os.Create(fullPath)
+	if err != nil {
+		return "", fmt.Errorf("creating %s: %w", fullPath, err)
+	}
+	defer file.Close()
+
+	_, err = file.Write([]byte(body))
+	if err != nil {
+		return "", fmt.Errorf("writing to %s: %w", fullPath, err)
+	}
+
+	return fullPath, nil
+}
+
+// Returns the seconds passed since the start of t.
+// The start of t is determined as y:m:d:0:0:0:0
+func secondsSinceDayStart(t time.Time) int {
+	y, m, d := t.Date()
+	start := time.Date(y, m, d, 0, 0, 0, 0, t.Location())
+	elapsed := time.Since(start)
+	return int(elapsed.Seconds())
 }
