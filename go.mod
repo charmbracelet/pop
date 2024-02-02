@@ -3,8 +3,8 @@ module github.com/charmbracelet/pop
 go 1.19
 
 require (
-	github.com/charmbracelet/bubbles v0.16.2-0.20230711184233-0bdcc628fb8f
-	github.com/charmbracelet/bubbletea v0.24.3-0.20230710130425-c4c83ba757f8
+	github.com/charmbracelet/bubbles v0.18.0
+	github.com/charmbracelet/bubbletea v0.25.0
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/charmbracelet/x/exp/ordered v0.0.0-20230707174939-50fb4f48b5b3
 	github.com/muesli/mango-cobra v1.2.0
@@ -32,7 +32,7 @@ require (
 	github.com/muesli/mango-pflag v0.1.0 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
-	github.com/rivo/uniseg v0.4.4 // indirect
+	github.com/rivo/uniseg v0.4.6 // indirect
 	github.com/sahilm/fuzzy v0.1.1-0.20230530133925-c48e322e2a8f // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/toorop/go-dkim v0.0.0-20201103131630-e1cd1a0a5208 // indirect
