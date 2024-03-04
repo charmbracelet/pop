@@ -40,10 +40,6 @@ To use `pop`, you will need a `RESEND_API_KEY`.
 
 You can grab one from: https://resend.com/api-keys.
 
-> **Note**:
-> If you use a resend account without a custom domain the POP_FROM value should be "onboarding@resend.dev"
-
-
 ### Environment
 
 To avoid typing your `From: ` email address, you can also set the `POP_FROM`
@@ -54,6 +50,9 @@ export RESEND_API_KEY=$(pass RESEND_API_KEY)
 export POP_FROM=pop@charm.sh
 export POP_SIGNATURE="Sent with [Pop](https://github.com/charmbracelet/pop)!"
 ```
+> **Note**:
+> If you wish to use a resend account without a custom domain, you can use
+> `onboarding@resend.dev` to send emails.
 
 ## Installation
 
