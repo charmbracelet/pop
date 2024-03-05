@@ -72,6 +72,9 @@ environment to pre-fill the field anytime you launch `pop`.
 export POP_FROM=pop@charm.sh
 export POP_SIGNATURE="Sent with [Pop](https://github.com/charmbracelet/pop)!"
 ```
+> **Note**:
+> If you wish to use a resend account without a custom domain, you can use
+> `onboarding@resend.dev` to send emails.
 
 ## Installation
 
