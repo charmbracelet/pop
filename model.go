@@ -213,7 +213,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.state = editingFrom
 		m.focusActiveInput()
 		m.err = msg
-		return m, clearErrAfter(5 * time.Second)
+		return m, clearErrAfter(10 * time.Second)
 	case clearErrMsg:
 		m.err = nil
 	case tea.KeyMsg:
