@@ -115,7 +115,7 @@ Use [`mods`](https://github.com/charmbracelet/mods) with `pop` to write an email
 > Use the `--preview` flag to preview the email and make changes before sending.
 
 ```bash
-pop <<< '$(mods -f "Explain why CLIs are awesome")' \
+pop <<< "$(mods -f 'Explain why CLIs are awesome')" \
     --subject "The command line is the best" \
     --preview
 ```
