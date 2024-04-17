@@ -16,6 +16,7 @@ import (
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
 	renderer "github.com/yuin/goldmark/renderer/html"
+	"go.abhg.dev/goldmark/frontmatter"
 )
 
 // ToSeparator is the separator used to split the To, Cc, and Bcc fields.
@@ -131,26 +132,25 @@ func sendSMTPEmail(to, cc, bcc []string, from, subject, body string, attachments
 	return email.Send(smtpClient)
 }
 
-func sendResendEmail(to, _, _ []string, from, subject, body string, attachments []string) error {
+func sendResendEmail(to, cc, bcc []string, from, subject, body string, attachments []string) error {
 	client := resend.NewClient(resendAPIKey)
 
 	html := bytes.NewBufferString("")
 	// If the conversion fails, we'll simply send the plain-text body.
+	var options []goldmark.Option
 	if unsafe {
-		markdown := goldmark.New(
-			goldmark.WithRendererOptions(
-				renderer.WithUnsafe(),
-			),
-			goldmark.WithExtensions(
-				extension.Strikethrough,
-				extension.Table,
-				extension.Linkify,
-			),
-		)
-		_ = markdown.Convert([]byte(body), html)
-	} else {
-		_ = goldmark.Convert([]byte(body), html)
+		options = append(options, goldmark.WithRendererOptions(
+			renderer.WithUnsafe(),
+		))
 	}
+	options = append(options, goldmark.WithExtensions(
+		extension.Strikethrough,
+		extension.Table,
+		extension.Linkify,
+		&frontmatter.Extender{},
+	))
+	markdown := goldmark.New(options...)
+	_ = markdown.Convert([]byte(body), html)
 
 	request := &resend.SendEmailRequest{
 		From:        from,
