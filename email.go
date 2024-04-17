@@ -14,6 +14,7 @@ import (
 	mail "github.com/xhit/go-simple-mail/v2"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
+  "go.abhg.dev/goldmark/frontmatter"
 	renderer "github.com/yuin/goldmark/renderer/html"
 )
 
@@ -140,6 +141,7 @@ func sendResendEmail(to, _, _ []string, from, subject, body string, attachments 
 				extension.Strikethrough,
 				extension.Table,
 				extension.Linkify,
+        &frontmatter.Extender{},
 			),
 		)
 		_ = markdown.Convert([]byte(body), html)
