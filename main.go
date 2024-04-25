@@ -138,6 +138,8 @@ var rootCmd = &cobra.Command{
 		p := tea.NewProgram(NewModel(resend.SendEmailRequest{
 			From:        from,
 			To:          to,
+			Bcc:         bcc,
+			Cc:          cc,
 			Subject:     subject,
 			Text:        body,
 			Attachments: makeAttachments(attachments),
