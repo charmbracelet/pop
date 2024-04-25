@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -49,6 +50,10 @@ func (m Model) sendEmailCmd() tea.Cmd {
 			err = errors.New("[ERROR]: unknown delivery method")
 		}
 		if err != nil {
+			path, storeErr := saveTmp(m.Body.Value())
+			if storeErr == nil {
+				err = fmt.Errorf("%w\nEmail saved to: %s", err, path)
+			}
 			return sendEmailFailureMsg(err)
 		}
 		return sendEmailSuccessMsg{}
@@ -184,4 +189,21 @@ func makeAttachments(paths []string) []resend.Attachment {
 	}
 
 	return attachments
+}
+
+// saveTmp is a helper function that stores a string in a temporary file.
+// It returns the path of the file created.
+func saveTmp(s string) (string, error) {
+	f, err := os.CreateTemp("", fmt.Sprintf("pop-%s-*.txt", time.Now().Format("2006-01-02")))
+	if err != nil {
+		return "", fmt.Errorf("creating temp file: %w", err)
+	}
+	defer f.Close()
+
+	_, err = f.WriteString(s)
+	if err != nil {
+		return "", fmt.Errorf("error writing to %s: %w", f.Name(), err)
+	}
+
+	return f.Name(), nil
 }
