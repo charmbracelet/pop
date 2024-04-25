@@ -23,6 +23,8 @@ type State int
 const (
 	editingFrom State = iota
 	editingTo
+	editingCc
+	editingBcc
 	editingSubject
 	editingBody
 	editingAttachments
@@ -68,8 +70,9 @@ type Model struct {
 	// This is a list of file paths which are picked with a filepicker.
 	Attachments list.Model
 
-	Cc  textinput.Model
-	Bcc textinput.Model
+	showCc bool
+	Cc     textinput.Model
+	Bcc    textinput.Model
 
 	// filepicker is used to pick file attachments.
 	filepicker     filepicker.Model
@@ -101,6 +104,24 @@ func NewModel(defaults resend.SendEmailRequest, deliveryMethod DeliveryMethod) M
 	to.TextStyle = textStyle
 	to.Placeholder = "you@example.com"
 	to.SetValue(strings.Join(defaults.To, ToSeparator))
+
+	cc := textinput.New()
+	cc.Prompt = "Cc "
+	cc.PromptStyle = labelStyle.Copy()
+	cc.Cursor.Style = cursorStyle
+	cc.PlaceholderStyle = placeholderStyle
+	cc.TextStyle = textStyle
+	cc.Placeholder = "cc@example.com"
+	cc.SetValue(strings.Join(defaults.Cc, ToSeparator))
+
+	bcc := textinput.New()
+	bcc.Prompt = "Bcc "
+	bcc.PromptStyle = labelStyle.Copy()
+	bcc.Cursor.Style = cursorStyle
+	bcc.PlaceholderStyle = placeholderStyle
+	bcc.TextStyle = textStyle
+	bcc.Placeholder = "bcc@example.com"
+	bcc.SetValue(strings.Join(defaults.Bcc, ToSeparator))
 
 	subject := textinput.New()
 	subject.Prompt = "Subject "
@@ -172,6 +193,9 @@ func NewModel(defaults resend.SendEmailRequest, deliveryMethod DeliveryMethod) M
 		state:          state,
 		From:           from,
 		To:             to,
+		showCc:         len(cc.Value()) > 0 || len(bcc.Value()) > 0,
+		Cc:             cc,
+		Bcc:            bcc,
 		Subject:        subject,
 		Body:           body,
 		Attachments:    attachments,
@@ -225,6 +249,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.state = editingTo
 				m.To.Focus()
 			case editingTo:
+				if m.showCc {
+					m.state = editingCc
+				} else {
+					m.state = editingSubject
+				}
+			case editingCc:
+				m.state = editingBcc
+			case editingBcc:
 				m.state = editingSubject
 			case editingSubject:
 				m.state = editingBody
@@ -244,8 +276,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.state = hoveringSendButton
 			case editingTo:
 				m.state = editingFrom
-			case editingSubject:
+			case editingCc:
 				m.state = editingTo
+			case editingBcc:
+				m.state = editingCc
+			case editingSubject:
+				if m.showCc {
+					m.state = editingBcc
+				} else {
+					m.state = editingTo
+				}
 			case editingBody:
 				m.state = editingSubject
 			case editingAttachments:
@@ -286,6 +326,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmds = append(cmds, cmd)
 	m.To, cmd = m.To.Update(msg)
 	cmds = append(cmds, cmd)
+	if m.showCc {
+		m.Cc, cmd = m.Cc.Update(msg)
+		cmds = append(cmds, cmd)
+		m.Bcc, cmd = m.Bcc.Update(msg)
+		cmds = append(cmds, cmd)
+	}
 	m.Subject, cmd = m.Subject.Update(msg)
 	cmds = append(cmds, cmd)
 	m.Body, cmd = m.Body.Update(msg)
@@ -320,8 +366,18 @@ func (m *Model) blurInputs() {
 	m.To.Blur()
 	m.Subject.Blur()
 	m.Body.Blur()
+	if m.showCc {
+		m.Cc.Blur()
+		m.Bcc.Blur()
+	}
 	m.From.PromptStyle = labelStyle
 	m.To.PromptStyle = labelStyle
+	if m.showCc {
+		m.Cc.PromptStyle = labelStyle
+		m.Cc.TextStyle = textStyle
+		m.Bcc.PromptStyle = labelStyle
+		m.Bcc.TextStyle = textStyle
+	}
 	m.Subject.PromptStyle = labelStyle
 	m.From.TextStyle = textStyle
 	m.To.TextStyle = textStyle
@@ -342,6 +398,16 @@ func (m *Model) focusActiveInput() {
 		m.To.TextStyle = activeTextStyle
 		m.To.Focus()
 		m.To.CursorEnd()
+	case editingCc:
+		m.Cc.PromptStyle = activeLabelStyle
+		m.Cc.TextStyle = activeTextStyle
+		m.Cc.Focus()
+		m.Cc.CursorEnd()
+	case editingBcc:
+		m.Bcc.PromptStyle = activeLabelStyle
+		m.Bcc.TextStyle = activeTextStyle
+		m.Bcc.Focus()
+		m.Bcc.CursorEnd()
 	case editingSubject:
 		m.Subject.PromptStyle = activeLabelStyle
 		m.Subject.TextStyle = activeTextStyle
@@ -376,6 +442,12 @@ func (m Model) View() string {
 	s.WriteString("\n")
 	s.WriteString(m.To.View())
 	s.WriteString("\n")
+	if m.showCc {
+		s.WriteString(m.Cc.View())
+		s.WriteString("\n")
+		s.WriteString(m.Bcc.View())
+		s.WriteString("\n")
+	}
 	s.WriteString(m.Subject.View())
 	s.WriteString("\n\n")
 	s.WriteString(m.Body.View())

@@ -156,6 +156,8 @@ func sendResendEmail(to, _, _ []string, from, subject, body string, attachments 
 		From:        from,
 		To:          to,
 		Subject:     subject,
+		Cc:          cc,
+		Bcc:         bcc,
 		Html:        html.String(),
 		Text:        body,
 		Attachments: makeAttachments(attachments),
