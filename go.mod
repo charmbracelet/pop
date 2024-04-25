@@ -14,7 +14,11 @@ require (
 	github.com/resendlabs/resend-go v1.7.0
 	github.com/spf13/cobra v1.8.1
 	github.com/xhit/go-simple-mail/v2 v2.16.0
+<<<<<<< HEAD
 	github.com/yuin/goldmark v1.7.2
+=======
+	github.com/yuin/goldmark v1.7.1
+>>>>>>> 17ea2b5 (go mod tidy)
 	go.abhg.dev/goldmark/frontmatter v0.2.0
 )
 
@@ -44,9 +48,16 @@ require (
 	github.com/sahilm/fuzzy v0.1.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/toorop/go-dkim v0.0.0-20240103092955-90b7d1423f92 // indirect
+<<<<<<< HEAD
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.21.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
+=======
+	golang.org/x/sync v0.6.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
+	golang.org/x/term v0.17.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
+>>>>>>> 17ea2b5 (go mod tidy)
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
