@@ -8,7 +8,7 @@ require (
 	github.com/charmbracelet/bubbles v0.18.0
 	github.com/charmbracelet/bubbletea v0.25.0
 	github.com/charmbracelet/lipgloss v0.10.0
-	github.com/charmbracelet/x/exp/ordered v0.0.0-20240229115032-4b79243a3516
+	github.com/charmbracelet/x/exp/ordered v0.1.0
 	github.com/muesli/mango-cobra v1.2.0
 	github.com/muesli/roff v0.1.0
 	github.com/resendlabs/resend-go v1.7.0
