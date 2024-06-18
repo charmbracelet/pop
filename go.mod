@@ -12,7 +12,7 @@ require (
 	github.com/muesli/mango-cobra v1.2.0
 	github.com/muesli/roff v0.1.0
 	github.com/resendlabs/resend-go v1.7.0
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	github.com/xhit/go-simple-mail/v2 v2.16.0
 	github.com/yuin/goldmark v1.7.1
 	go.abhg.dev/goldmark/frontmatter v0.2.0
