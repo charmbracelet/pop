@@ -14,7 +14,7 @@ require (
 	github.com/resendlabs/resend-go v1.7.0
 	github.com/spf13/cobra v1.8.1
 	github.com/xhit/go-simple-mail/v2 v2.16.0
-	github.com/yuin/goldmark v1.7.2
+	github.com/yuin/goldmark v1.7.3
 )
 
 require (
@@ -24,7 +24,6 @@ require (
 	github.com/charmbracelet/x/input v0.1.2 // indirect
 	github.com/charmbracelet/x/term v0.1.1 // indirect
 	github.com/charmbracelet/x/windows v0.1.2 // indirect
-	github.com/containerd/console v1.0.4 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/go-test/deep v1.1.0 // indirect
@@ -46,6 +45,5 @@ require (
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.21.0 // indirect
-	golang.org/x/term v0.21.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 )
