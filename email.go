@@ -71,6 +71,7 @@ func sendSMTPEmail(to, cc, bcc []string, from, subject, body string, attachments
 	server.Password = smtpPassword
 	server.Host = smtpHost
 	server.Port = smtpPort
+	server.Helo = smtpHelo
 
 	// Set defaults for gmail.
 	if strings.HasSuffix(server.Username, gmailSuffix) {
