@@ -6,7 +6,7 @@ toolchain go1.21.7
 
 require (
 	github.com/charmbracelet/bubbles v0.20.0
-	github.com/charmbracelet/bubbletea v1.3.0
+	github.com/charmbracelet/bubbletea v1.3.2
 	github.com/charmbracelet/lipgloss v1.0.0
 	github.com/charmbracelet/x/exp/ordered v0.1.0
 	github.com/muesli/mango-cobra v1.2.0
@@ -39,7 +39,7 @@ require (
 	github.com/sahilm/fuzzy v0.1.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/toorop/go-dkim v0.0.0-20240103092955-90b7d1423f92 // indirect
-	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
+	golang.org/x/sync v0.11.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 )
