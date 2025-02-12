@@ -6,7 +6,7 @@ toolchain go1.21.7
 
 require (
 	github.com/charmbracelet/bubbles v0.20.0
-	github.com/charmbracelet/bubbletea v1.3.2
+	github.com/charmbracelet/bubbletea v1.3.3
 	github.com/charmbracelet/lipgloss v1.0.0
 	github.com/charmbracelet/x/exp/ordered v0.1.0
 	github.com/muesli/mango-cobra v1.2.0
