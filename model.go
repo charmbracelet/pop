@@ -58,6 +58,8 @@ type Model struct {
 
 	// From represents the sender's email address.
 	From textinput.Model
+	// ReplyTo represents the reply-to email address.
+	ReplyTo textinput.Model
 	// To represents the recipient's email address.
 	// This can be a comma-separated list of addresses.
 	To textinput.Model
@@ -95,6 +97,16 @@ func NewModel(defaults resend.SendEmailRequest, deliveryMethod DeliveryMethod) M
 	from.Cursor.Style = cursorStyle
 	from.PlaceholderStyle = placeholderStyle
 	from.SetValue(defaults.From)
+
+	replyTo := textinput.New()
+	replyTo.Prompt = "Reply-To "
+	replyTo.Placeholder = "reply@example.com"
+	replyTo.PromptStyle = labelStyle.Copy()
+	replyTo.PromptStyle = labelStyle
+	replyTo.TextStyle = textStyle
+	replyTo.Cursor.Style = cursorStyle
+	replyTo.PlaceholderStyle = placeholderStyle
+	replyTo.SetValue(defaults.ReplyTo)
 
 	to := textinput.New()
 	to.Prompt = "To "
@@ -192,6 +204,7 @@ func NewModel(defaults resend.SendEmailRequest, deliveryMethod DeliveryMethod) M
 	m := Model{
 		state:          state,
 		From:           from,
+		ReplyTo:        replyTo,
 		To:             to,
 		showCc:         len(cc.Value()) > 0 || len(bcc.Value()) > 0,
 		Cc:             cc,
@@ -439,6 +452,8 @@ func (m Model) View() string {
 	var s strings.Builder
 
 	s.WriteString(m.From.View())
+	s.WriteString("\n")
+	s.WriteString(m.ReplyTo.View())
 	s.WriteString("\n")
 	s.WriteString(m.To.View())
 	s.WriteString("\n")
