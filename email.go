@@ -42,7 +42,7 @@ func (m Model) sendEmailCmd() tea.Cmd {
 		bcc := strings.Split(m.Bcc.Value(), ToSeparator)
 		switch m.DeliveryMethod {
 		case SMTP:
-			err = sendSMTPEmail(to, cc, bcc, m.From.Value(), m.Subject.Value(), m.Body.Value(), attachments)
+			err = sendSMTPEmail(to, cc, bcc, m.From.Value(), m.Subject.Value(), m.Body.Value(), plaintext, attachments)
 		case Resend:
 			err = sendResendEmail(to, cc, bcc, m.From.Value(), m.Subject.Value(), m.Body.Value(), attachments)
 		default:
@@ -65,7 +65,7 @@ const (
 	gmailSMTPPort = 587
 )
 
-func sendSMTPEmail(to, cc, bcc []string, from, subject, body string, attachments []string) error {
+func sendSMTPEmail(to, cc, bcc []string, from, subject, body string, plaintext bool, attachments []string) error {
 	server := mail.NewSMTPClient()
 
 	var err error
@@ -116,7 +116,7 @@ func sendSMTPEmail(to, cc, bcc []string, from, subject, body string, attachments
 	html := bytes.NewBufferString("")
 	convertErr := goldmark.Convert([]byte(body), html)
 
-	if convertErr != nil {
+	if (plaintext) || (convertErr != nil) {
 		email.SetBody(mail.TextPlain, body)
 	} else {
 		email.SetBody(mail.TextHTML, html.String())
