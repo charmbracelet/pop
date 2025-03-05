@@ -103,7 +103,7 @@ var rootCmd = &cobra.Command{
 			return errors.New("unknown delivery method")
 		}
 
-		if hasStdin() {
+		if body == "" && hasStdin() {
 			b, err := io.ReadAll(os.Stdin)
 			if err != nil {
 				return err
