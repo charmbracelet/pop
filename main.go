@@ -126,7 +126,7 @@ var rootCmd = &cobra.Command{
 			case SMTP:
 				err = sendSMTPEmail(to, cc, bcc, from, subject, body, plaintext, attachments)
 			case Resend:
-				err = sendResendEmail(to, cc, bcc, from, subject, body, attachments)
+				err = sendResendEmail(to, cc, bcc, from, subject, body, plaintext, attachments)
 			default:
 				err = fmt.Errorf("unknown delivery method")
 			}
