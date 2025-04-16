@@ -31,7 +31,7 @@ const envTrue = "true"
 const PopOAuthResend = "POP_OAUTH_RESEND"
 
 // PopPlaintext control whether the message should be sent in plaintext.
-// Boolean, default `false`
+// Boolean, default `false`.
 const PopPlaintext = "POP_PLAINTEXT"
 
 // ResendAPIKey is the environment variable that enables Resend as a delivery
@@ -227,7 +227,7 @@ See "pop skill" for a full skill definition for AI agents.`,
 			case SMTP:
 				err = sendSMTPEmail(to, cc, bcc, from, subject, body, plaintext, attachments)
 			case Resend:
-				err = sendResendEmail(to, cc, bcc, from, subject, body, attachments)
+				err = sendResendEmail(to, cc, bcc, from, subject, body, plaintext, attachments)
 			default:
 				err = fmt.Errorf("unknown delivery method")
 			}
