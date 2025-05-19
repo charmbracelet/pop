@@ -1,6 +1,7 @@
 module github.com/charmbracelet/pop
 
-go 1.21
+go 1.23.0
+
 toolchain go1.24.1
 
 require (
@@ -13,7 +14,7 @@ require (
 	github.com/resendlabs/resend-go v1.7.0
 	github.com/spf13/cobra v1.9.1
 	github.com/xhit/go-simple-mail/v2 v2.16.0
-	github.com/yuin/goldmark v1.7.11
+	github.com/yuin/goldmark v1.7.12
 )
 
 require (
