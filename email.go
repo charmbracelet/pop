@@ -42,9 +42,9 @@ func (m Model) sendEmailCmd() tea.Cmd {
 		bcc := strings.Split(m.Bcc.Value(), ToSeparator)
 		switch m.DeliveryMethod {
 		case SMTP:
-			err = sendSMTPEmail(to, cc, bcc, m.From.Value(), m.Subject.Value(), m.Body.Value(), attachments)
+			err = sendSMTPEmail(to, cc, bcc, m.From.Value(), m.Subject.Value(), m.Body.Value(), plaintext, attachments)
 		case Resend:
-			err = sendResendEmail(to, cc, bcc, m.From.Value(), m.Subject.Value(), m.Body.Value(), attachments)
+			err = sendResendEmail(to, cc, bcc, m.From.Value(), m.Subject.Value(), m.Body.Value(), plaintext, attachments)
 		default:
 			err = errors.New("[ERROR]: unknown delivery method")
 		}
@@ -63,7 +63,7 @@ const gmailSuffix = "@gmail.com"
 const gmailSMTPHost = "smtp.gmail.com"
 const gmailSMTPPort = 587
 
-func sendSMTPEmail(to, cc, bcc []string, from, subject, body string, attachments []string) error {
+func sendSMTPEmail(to, cc, bcc []string, from, subject, body string, plaintext bool, attachments []string) error {
 	server := mail.NewSMTPClient()
 
 	var err error
@@ -115,7 +115,7 @@ func sendSMTPEmail(to, cc, bcc []string, from, subject, body string, attachments
 	html := bytes.NewBufferString("")
 	convertErr := goldmark.Convert([]byte(body), html)
 
-	if convertErr != nil {
+	if (plaintext) || (convertErr != nil) {
 		email.SetBody(mail.TextPlain, body)
 	} else {
 		email.SetBody(mail.TextHTML, html.String())
@@ -131,25 +131,28 @@ func sendSMTPEmail(to, cc, bcc []string, from, subject, body string, attachments
 	return email.Send(smtpClient)
 }
 
-func sendResendEmail(to, _, _ []string, from, subject, body string, attachments []string) error {
+func sendResendEmail(to, _, _ []string, from, subject, body string, plaintext bool, attachments []string) error {
 	client := resend.NewClient(resendAPIKey)
 
 	html := bytes.NewBufferString("")
-	// If the conversion fails, we'll simply send the plain-text body.
-	if unsafe {
-		markdown := goldmark.New(
-			goldmark.WithRendererOptions(
-				renderer.WithUnsafe(),
-			),
-			goldmark.WithExtensions(
-				extension.Strikethrough,
-				extension.Table,
-				extension.Linkify,
-			),
-		)
-		_ = markdown.Convert([]byte(body), html)
-	} else {
-		_ = goldmark.Convert([]byte(body), html)
+	// If the conversion fails or plaintext is requested,
+	// we'll simply send the plain-text body.
+	if !plaintext {
+		if unsafe {
+			markdown := goldmark.New(
+				goldmark.WithRendererOptions(
+					renderer.WithUnsafe(),
+				),
+				goldmark.WithExtensions(
+					extension.Strikethrough,
+					extension.Table,
+					extension.Linkify,
+				),
+			)
+			_ = markdown.Convert([]byte(body), html)
+		} else {
+			_ = goldmark.Convert([]byte(body), html)
+		}
 	}
 
 	request := &resend.SendEmailRequest{
