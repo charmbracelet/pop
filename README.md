@@ -63,6 +63,19 @@ export POP_SMTP_USERNAME=pop@charm.sh
 export POP_SMTP_PASSWORD=hunter2
 ```
 
+#### Custom HELO
+
+> **Note**:
+> [Some SMTP relays](https://support.google.com/a/answer/2956491?hl=en&fl=1&sjid=11501593087205020993-NA) does not support `localhost` in the HELO CMD (which is the default pop behavior).
+
+To configure HELO value, you can set the following environment variables.
+
+```
+export POP_SMTP_HELO=charm.sh
+```
+
+Or via the cli `pop -c charm.sh`|`pop --smtp.helo charm.sh`
+
 ### Environment
 
 To avoid typing your `From: ` email address, you can also set the `POP_FROM`
