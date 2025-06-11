@@ -151,6 +151,12 @@ pop --attach $FILENAME --body "See attached invoice."
 
 - [`maaslalani/invoice`](https://github.com/maaslalani/invoice)
 
+## Contributing
+
+See [contributing][contribute].
+
+[contribute]: https://github.com/charmbracelet/pop/contribute
+
 ## Feedback
 
 We’d love to hear your thoughts on this project. Feel free to drop us a note!
