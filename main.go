@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -10,6 +11,7 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/fang"
 	mcobra "github.com/muesli/mango-cobra"
 	"github.com/muesli/roff"
 	"github.com/resendlabs/resend-go"
@@ -244,7 +246,7 @@ func init() {
 }
 
 func main() {
-	err := rootCmd.Execute()
+	err := fang.Execute(context.Background(), rootCmd)
 	if err != nil {
 		os.Exit(1)
 	}
