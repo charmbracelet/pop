@@ -197,12 +197,18 @@ var ManCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(ManCmd)
 
-	rootCmd.Flags().StringSliceVar(&bcc, "bcc", []string{os.Getenv(PopBcc)}, "BCC recipients")
+	bccValue := make([]string, 0, 1)
+	envBcc := os.Getenv(PopBcc)
+	if envBcc != "" {
+		bccValue = append(bccValue, envBcc)
+	}
+	rootCmd.Flags().StringSliceVar(&bcc, "bcc", bccValue, "BCC recipients"+commentStyle.Render("($"+PopBcc+")"))
 	rootCmd.Flags().StringSliceVar(&cc, "cc", []string{}, "CC recipients")
 	rootCmd.Flags().StringSliceVarP(&attachments, "attach", "a", []string{}, "Email's attachments")
 	rootCmd.Flags().StringSliceVarP(&to, "to", "t", []string{}, "Recipients")
 	rootCmd.Flags().StringVarP(&body, "body", "b", "", "Email's contents")
-	rootCmd.Flags().StringVarP(&from, "from", "f", os.Getenv(PopFrom), "Email's sender"+commentStyle.Render("($"+PopFrom+")"))
+	envFrom := os.Getenv(PopFrom)
+	rootCmd.Flags().StringVarP(&from, "from", "f", envFrom, "Email's sender"+commentStyle.Render("($"+PopFrom+")"))
 	rootCmd.Flags().StringVarP(&subject, "subject", "s", "", "Email's subject")
 	rootCmd.Flags().BoolVar(&preview, "preview", false, "Whether to preview the email before sending")
 	envUnsafe := os.Getenv(PopUnsafeHTML) == "true"
