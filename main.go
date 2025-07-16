@@ -26,6 +26,7 @@ const ResendAPIKey = "RESEND_API_KEY" //nolint:gosec
 
 // PopFrom is the environment variable that sets the default "from" address.
 const PopFrom = "POP_FROM"
+const PopBcc = "POP_BCC"
 
 // PopSignature is the environment variable that sets the default signature.
 const PopSignature = "POP_SIGNATURE"
@@ -196,13 +197,12 @@ var ManCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(ManCmd)
 
-	rootCmd.Flags().StringSliceVar(&bcc, "bcc", []string{}, "BCC recipients")
+	rootCmd.Flags().StringSliceVar(&bcc, "bcc", []string{os.Getenv(PopBcc)}, "BCC recipients")
 	rootCmd.Flags().StringSliceVar(&cc, "cc", []string{}, "CC recipients")
 	rootCmd.Flags().StringSliceVarP(&attachments, "attach", "a", []string{}, "Email's attachments")
 	rootCmd.Flags().StringSliceVarP(&to, "to", "t", []string{}, "Recipients")
 	rootCmd.Flags().StringVarP(&body, "body", "b", "", "Email's contents")
-	envFrom := os.Getenv(PopFrom)
-	rootCmd.Flags().StringVarP(&from, "from", "f", envFrom, "Email's sender"+commentStyle.Render("($"+PopFrom+")"))
+	rootCmd.Flags().StringVarP(&from, "from", "f", os.Getenv(PopFrom), "Email's sender"+commentStyle.Render("($"+PopFrom+")"))
 	rootCmd.Flags().StringVarP(&subject, "subject", "s", "", "Email's subject")
 	rootCmd.Flags().BoolVar(&preview, "preview", false, "Whether to preview the email before sending")
 	envUnsafe := os.Getenv(PopUnsafeHTML) == "true"
