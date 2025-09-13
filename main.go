@@ -27,6 +27,9 @@ const ResendAPIKey = "RESEND_API_KEY" //nolint:gosec
 // PopFrom is the environment variable that sets the default "from" address.
 const PopFrom = "POP_FROM"
 
+// PopReplyTo is the environment variable that sets the default reply-to address.
+const PopReplyTo = "POP_REPLY_TO"
+
 // PopSignature is the environment variable that sets the default signature.
 const PopSignature = "POP_SIGNATURE"
 
@@ -51,6 +54,7 @@ const PopSMTPInsecureSkipVerify = "POP_SMTP_INSECURE_SKIP_VERIFY"
 
 var (
 	from                   string
+	replyTo                string
 	to                     []string
 	cc                     []string
 	bcc                    []string
@@ -137,6 +141,7 @@ var rootCmd = &cobra.Command{
 
 		p := tea.NewProgram(NewModel(resend.SendEmailRequest{
 			From:        from,
+			ReplyTo:     replyTo,
 			To:          to,
 			Bcc:         bcc,
 			Cc:          cc,
@@ -203,6 +208,8 @@ func init() {
 	rootCmd.Flags().StringVarP(&body, "body", "b", "", "Email's contents")
 	envFrom := os.Getenv(PopFrom)
 	rootCmd.Flags().StringVarP(&from, "from", "f", envFrom, "Email's sender"+commentStyle.Render("($"+PopFrom+")"))
+	envReplyTo := os.Getenv(PopReplyTo)
+	rootCmd.Flags().StringVarP(&replyTo, "reply-to", "R", envReplyTo, "Email's reply-to address"+commentStyle.Render("($"+PopReplyTo+")"))
 	rootCmd.Flags().StringVarP(&subject, "subject", "s", "", "Email's subject")
 	rootCmd.Flags().BoolVar(&preview, "preview", false, "Whether to preview the email before sending")
 	envUnsafe := os.Getenv(PopUnsafeHTML) == "true"
