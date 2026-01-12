@@ -14,7 +14,7 @@ require (
 	github.com/resendlabs/resend-go v1.7.0
 	github.com/spf13/cobra v1.10.2
 	github.com/xhit/go-simple-mail/v2 v2.16.0
-	github.com/yuin/goldmark v1.7.14
+	github.com/yuin/goldmark v1.7.16
 )
 
 require (
