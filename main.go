@@ -85,6 +85,9 @@ var rootCmd = &cobra.Command{
 			if from == "" {
 				from = smtpUsername
 			}
+		case smtpHost != "":
+			// Allow SMTP delivery with just host for internal mail relays (no auth)
+			deliveryMethod = SMTP
 		}
 
 		switch deliveryMethod {
