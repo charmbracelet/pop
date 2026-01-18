@@ -26,6 +26,7 @@ const ResendAPIKey = "RESEND_API_KEY" //nolint:gosec
 
 // PopFrom is the environment variable that sets the default "from" address.
 const PopFrom = "POP_FROM"
+const PopBcc = "POP_BCC"
 
 // PopSignature is the environment variable that sets the default signature.
 const PopSignature = "POP_SIGNATURE"
@@ -196,7 +197,12 @@ var ManCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(ManCmd)
 
-	rootCmd.Flags().StringSliceVar(&bcc, "bcc", []string{}, "BCC recipients")
+	bccValue := make([]string, 0, 1)
+	envBcc := os.Getenv(PopBcc)
+	if envBcc != "" {
+		bccValue = append(bccValue, envBcc)
+	}
+	rootCmd.Flags().StringSliceVar(&bcc, "bcc", bccValue, "BCC recipients"+commentStyle.Render("($"+PopBcc+")"))
 	rootCmd.Flags().StringSliceVar(&cc, "cc", []string{}, "CC recipients")
 	rootCmd.Flags().StringSliceVarP(&attachments, "attach", "a", []string{}, "Email's attachments")
 	rootCmd.Flags().StringSliceVarP(&to, "to", "t", []string{}, "Recipients")
