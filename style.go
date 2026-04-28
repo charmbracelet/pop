@@ -1,3 +1,4 @@
+// Package main implements Pop, a tool for sending emails from your terminal.
 package main
 
 import (
@@ -6,12 +7,14 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-const accentColor = lipgloss.Color("99")
-const yellowColor = lipgloss.Color("#ECFD66")
-const whiteColor = lipgloss.Color("255")
-const grayColor = lipgloss.Color("241")
-const darkGrayColor = lipgloss.Color("236")
-const lightGrayColor = lipgloss.Color("247")
+const (
+	accentColor    = lipgloss.Color("99")
+	yellowColor    = lipgloss.Color("#ECFD66")
+	whiteColor     = lipgloss.Color("255")
+	grayColor      = lipgloss.Color("241")
+	darkGrayColor  = lipgloss.Color("236")
+	lightGrayColor = lipgloss.Color("247")
+)
 
 var (
 	activeTextStyle = lipgloss.NewStyle().Foreground(whiteColor)

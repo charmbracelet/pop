@@ -59,9 +59,11 @@ func (m Model) sendEmailCmd() tea.Cmd {
 	}
 }
 
-const gmailSuffix = "@gmail.com"
-const gmailSMTPHost = "smtp.gmail.com"
-const gmailSMTPPort = 587
+const (
+	gmailSuffix   = "@gmail.com"
+	gmailSMTPHost = "smtp.gmail.com"
+	gmailSMTPPort = 587
+)
 
 func sendSMTPEmail(to, cc, bcc []string, from, subject, body string, attachments []string) error {
 	server := mail.NewSMTPClient()
@@ -100,9 +102,8 @@ func sendSMTPEmail(to, cc, bcc []string, from, subject, body string, attachments
 	}
 
 	smtpClient, err := server.Connect()
-
 	if err != nil {
-		return err
+		return fmt.Errorf("connecting to SMTP server: %w", err)
 	}
 
 	email := mail.NewMSG()
@@ -128,10 +129,10 @@ func sendSMTPEmail(to, cc, bcc []string, from, subject, body string, attachments
 		})
 	}
 
-	return email.Send(smtpClient)
+	return fmt.Errorf("sending email: %w", email.Send(smtpClient))
 }
 
-func sendResendEmail(to, _, _ []string, from, subject, body string, attachments []string) error {
+func sendResendEmail(to, cc, bcc []string, from, subject, body string, attachments []string) error {
 	client := resend.NewClient(resendAPIKey)
 
 	html := bytes.NewBufferString("")
@@ -165,7 +166,7 @@ func sendResendEmail(to, _, _ []string, from, subject, body string, attachments 
 
 	_, err := client.Emails.Send(request)
 	if err != nil {
-		return err
+		return fmt.Errorf("sending email via Resend: %w", err)
 	}
 
 	return nil
@@ -198,7 +199,7 @@ func saveTmp(s string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("creating temp file: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	_, err = f.WriteString(s)
 	if err != nil {

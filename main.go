@@ -43,7 +43,7 @@ const PopSMTPUsername = "POP_SMTP_USERNAME"
 const PopSMTPPassword = "POP_SMTP_PASSWORD" //nolint:gosec
 
 // PopSMTPEncryption is the encryption type for the SMTP server if the user is using the SMTP delivery method.
-const PopSMTPEncryption = "POP_SMTP_ENCRYPTION" //nolint:gosec
+const PopSMTPEncryption = "POP_SMTP_ENCRYPTION"
 
 // PopSMTPInsecureSkipVerify is whether or not to skip TLS verification for the
 // SMTP server if the user is using the SMTP delivery method.
@@ -73,7 +73,7 @@ var rootCmd = &cobra.Command{
 	Use:   "pop",
 	Short: "Send emails from your terminal",
 	Long:  `Pop is a tool for sending emails from your terminal.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		var deliveryMethod DeliveryMethod
 		switch {
 		case resendAPIKey != "" && smtpUsername != "" && smtpPassword != "":
@@ -101,12 +101,13 @@ var rootCmd = &cobra.Command{
 			cmd.SilenceUsage = true
 			cmd.SilenceErrors = true
 			return errors.New("unknown delivery method")
+		case Resend, SMTP:
 		}
 
 		if body == "" && hasStdin() {
 			b, err := io.ReadAll(os.Stdin)
 			if err != nil {
-				return err
+				return fmt.Errorf("reading stdin: %w", err)
 			}
 			body = string(b)
 		}
@@ -147,7 +148,7 @@ var rootCmd = &cobra.Command{
 
 		m, err := p.Run()
 		if err != nil {
-			return err
+			return fmt.Errorf("running program: %w", err)
 		}
 		mm := m.(Model)
 		if !mm.abort {
@@ -167,7 +168,7 @@ var (
 	// Version stores the build version of VHS at the time of package through
 	// -ldflags.
 	//
-	// go build -ldflags "-s -w -X=main.Version=$(VERSION)"
+	// go build -ldflags "-s -w -X=main.Version=$(VERSION)".
 	Version string
 
 	// CommitSHA stores the git commit SHA at the time of package through -ldflags.
@@ -182,9 +183,9 @@ var ManCmd = &cobra.Command{
 	Args:   cobra.NoArgs,
 	Hidden: true,
 	RunE: func(_ *cobra.Command, _ []string) error {
-		page, err := mcobra.NewManPage(1, rootCmd) // .
+		page, err := mcobra.NewManPage(1, rootCmd)
 		if err != nil {
-			return err
+			return fmt.Errorf("generating man page: %w", err)
 		}
 
 		page = page.WithSection("Copyright", "© 2023 Charmbracelet, Inc.\n"+"Released under MIT License.")

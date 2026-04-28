@@ -89,7 +89,6 @@ func NewModel(defaults resend.SendEmailRequest, deliveryMethod DeliveryMethod) M
 	from := textinput.New()
 	from.Prompt = "From "
 	from.Placeholder = "me@example.com"
-	from.PromptStyle = labelStyle.Copy()
 	from.PromptStyle = labelStyle
 	from.TextStyle = textStyle
 	from.Cursor.Style = cursorStyle
@@ -98,7 +97,7 @@ func NewModel(defaults resend.SendEmailRequest, deliveryMethod DeliveryMethod) M
 
 	to := textinput.New()
 	to.Prompt = "To "
-	to.PromptStyle = labelStyle.Copy()
+	to.PromptStyle = labelStyle
 	to.Cursor.Style = cursorStyle
 	to.PlaceholderStyle = placeholderStyle
 	to.TextStyle = textStyle
@@ -107,7 +106,7 @@ func NewModel(defaults resend.SendEmailRequest, deliveryMethod DeliveryMethod) M
 
 	cc := textinput.New()
 	cc.Prompt = "Cc "
-	cc.PromptStyle = labelStyle.Copy()
+	cc.PromptStyle = labelStyle
 	cc.Cursor.Style = cursorStyle
 	cc.PlaceholderStyle = placeholderStyle
 	cc.TextStyle = textStyle
@@ -116,7 +115,7 @@ func NewModel(defaults resend.SendEmailRequest, deliveryMethod DeliveryMethod) M
 
 	bcc := textinput.New()
 	bcc.Prompt = "Bcc "
-	bcc.PromptStyle = labelStyle.Copy()
+	bcc.PromptStyle = labelStyle
 	bcc.Cursor.Style = cursorStyle
 	bcc.PlaceholderStyle = placeholderStyle
 	bcc.TextStyle = textStyle
@@ -125,7 +124,7 @@ func NewModel(defaults resend.SendEmailRequest, deliveryMethod DeliveryMethod) M
 
 	subject := textinput.New()
 	subject.Prompt = "Subject "
-	subject.PromptStyle = labelStyle.Copy()
+	subject.PromptStyle = labelStyle
 	subject.Cursor.Style = cursorStyle
 	subject.PlaceholderStyle = placeholderStyle
 	subject.TextStyle = textStyle
@@ -221,7 +220,7 @@ func (m Model) Init() tea.Cmd {
 type clearErrMsg struct{}
 
 func clearErrAfter(d time.Duration) tea.Cmd {
-	return tea.Tick(d, func(t time.Time) tea.Msg {
+	return tea.Tick(d, func(_ time.Time) tea.Msg {
 		return clearErrMsg{}
 	})
 }
@@ -266,6 +265,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.state = hoveringSendButton
 			case hoveringSendButton:
 				m.state = editingFrom
+			case pickingFile, sendingEmail:
 			}
 			m.focusActiveInput()
 
@@ -292,6 +292,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.state = editingBody
 			case hoveringSendButton:
 				m.state = editingAttachments
+			case pickingFile, sendingEmail:
 			}
 			m.focusActiveInput()
 
@@ -353,6 +354,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case sendingEmail:
 		m.loadingSpinner, cmd = m.loadingSpinner.Update(msg)
 		cmds = append(cmds, cmd)
+	case editingFrom, editingTo, editingCc, editingBcc, editingSubject, editingBody, hoveringSendButton:
 	}
 
 	m.help, cmd = m.help.Update(msg)
@@ -419,6 +421,7 @@ func (m *Model) focusActiveInput() {
 	case editingAttachments:
 		m.Attachments.Styles.Title = activeLabelStyle
 		m.Attachments.SetDelegate(attachmentDelegate{true})
+	case hoveringSendButton, pickingFile, sendingEmail:
 	}
 }
 
@@ -434,6 +437,7 @@ func (m Model) View() string {
 			"\n\n" + m.filepicker.View()
 	case sendingEmail:
 		return "\n " + m.loadingSpinner.View() + "Sending email"
+	case editingFrom, editingTo, editingCc, editingBcc, editingSubject, editingBody, editingAttachments, hoveringSendButton:
 	}
 
 	var s strings.Builder

@@ -1,3 +1,4 @@
+// Package main implements Pop, a tool for sending emails from your terminal.
 package main
 
 import (
