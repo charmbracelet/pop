@@ -45,6 +45,9 @@ const PopSMTPPassword = "POP_SMTP_PASSWORD" //nolint:gosec
 // PopSMTPEncryption is the encryption type for the SMTP server if the user is using the SMTP delivery method.
 const PopSMTPEncryption = "POP_SMTP_ENCRYPTION"
 
+// PopSMTPHelo is the HELO sent to the SMTP server if the user is using the SMTP delivery method.
+const PopSMTPHelo = "POP_SMTP_HELO"
+
 // PopSMTPInsecureSkipVerify is whether or not to skip TLS verification for the
 // SMTP server if the user is using the SMTP delivery method.
 const PopSMTPInsecureSkipVerify = "POP_SMTP_INSECURE_SKIP_VERIFY"
@@ -67,6 +70,7 @@ var (
 	smtpEncryption         string
 	smtpInsecureSkipVerify bool
 	resendAPIKey           string
+	smtpHelo               string
 )
 
 var rootCmd = &cobra.Command{
@@ -227,6 +231,8 @@ func init() {
 	rootCmd.Flags().BoolVarP(&smtpInsecureSkipVerify, "smtp.insecure", "i", envInsecureSkipVerify, "Skip TLS verification with SMTP server"+commentStyle.Render("($"+PopSMTPInsecureSkipVerify+")"))
 	envResendAPIKey := os.Getenv(ResendAPIKey)
 	rootCmd.Flags().StringVarP(&resendAPIKey, "resend.key", "r", envResendAPIKey, "API key for the Resend.com"+commentStyle.Render("($"+ResendAPIKey+")"))
+	envSMTPHelo := os.Getenv(PopSMTPHelo)
+	rootCmd.Flags().StringVarP(&smtpHelo, "smtp.helo", "c", envSMTPHelo, "Helo sent to the SMTP server"+commentStyle.Render("($"+PopSMTPHelo+")"))
 
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 
