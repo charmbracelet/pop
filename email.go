@@ -155,6 +155,7 @@ func sendResendEmail(to, cc, bcc []string, from, subject, body string, attachmen
 
 	request := &resend.SendEmailRequest{
 		From:        from,
+		ReplyTo:     replyTo,
 		To:          to,
 		Subject:     subject,
 		Cc:          cc,
