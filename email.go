@@ -84,6 +84,11 @@ func sendSMTPEmail(to, cc, bcc []string, from, subject, body string, attachments
 		}
 	}
 
+	// If no authentication is provided, disable it for internal mail relays
+	if server.Username == "" && server.Password == "" {
+		server.Authentication = mail.AuthNone
+	}
+
 	switch strings.ToLower(smtpEncryption) {
 	case "ssl":
 		server.Encryption = mail.EncryptionSSLTLS
