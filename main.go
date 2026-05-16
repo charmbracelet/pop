@@ -74,15 +74,20 @@ var rootCmd = &cobra.Command{
 	Short: "Send emails from your terminal",
 	Long:  `Pop is a tool for sending emails from your terminal.`,
 	RunE: func(cmd *cobra.Command, _ []string) error {
+		// SMTP is "enabled" if the user pointed at a server, with or
+		// without credentials. Local/relay setups (universities, internal
+		// mailrelays) often run without auth, see #136.
+		smtpEnabled := smtpHost != "" || smtpUsername != "" || smtpPassword != ""
+
 		var deliveryMethod DeliveryMethod
 		switch {
-		case resendAPIKey != "" && smtpUsername != "" && smtpPassword != "":
+		case resendAPIKey != "" && smtpEnabled:
 			deliveryMethod = Unknown
 		case resendAPIKey != "":
 			deliveryMethod = Resend
-		case smtpUsername != "" && smtpPassword != "":
+		case smtpEnabled:
 			deliveryMethod = SMTP
-			if from == "" {
+			if from == "" && smtpUsername != "" {
 				from = smtpUsername
 			}
 		}
