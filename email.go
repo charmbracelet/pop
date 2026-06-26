@@ -129,7 +129,10 @@ func sendSMTPEmail(to, cc, bcc []string, from, subject, body string, attachments
 		})
 	}
 
-	return fmt.Errorf("sending email: %w", email.Send(smtpClient))
+	if err := email.Send(smtpClient); err != nil {
+		return fmt.Errorf("sending email: %w", err)
+	}
+	return nil
 }
 
 func sendResendEmail(to, cc, bcc []string, from, subject, body string, attachments []string) error {
