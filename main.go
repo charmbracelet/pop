@@ -67,6 +67,7 @@ var (
 	smtpEncryption         string
 	smtpInsecureSkipVerify bool
 	resendAPIKey           string
+	noTTY                  bool
 )
 
 var rootCmd = &cobra.Command{
@@ -116,6 +117,30 @@ var rootCmd = &cobra.Command{
 			body += "\n\n" + signature
 		}
 
+		if noTTY && (len(to) == 0 || from == "" || subject == "" || body == "" || preview) {
+			var missing []string
+			if from == "" {
+				missing = append(missing, "--from")
+			}
+			if len(to) == 0 {
+				missing = append(missing, "--to")
+			}
+			if subject == "" {
+				missing = append(missing, "--subject")
+			}
+			if body == "" {
+				missing = append(missing, "--body")
+			}
+			if preview {
+				missing = append(missing, "(--preview is not supported with --no-tty)")
+			}
+			err := fmt.Errorf("missing required flags in --no-tty mode: %s", strings.Join(missing, ", "))
+			fmt.Fprintln(os.Stderr, err.Error())
+			cmd.SilenceUsage = true
+			cmd.SilenceErrors = true
+			return err
+		}
+
 		if len(to) > 0 && from != "" && subject != "" && body != "" && !preview {
 			var err error
 			switch deliveryMethod {
@@ -129,8 +154,12 @@ var rootCmd = &cobra.Command{
 			if err != nil {
 				cmd.SilenceUsage = true
 				cmd.SilenceErrors = true
+				if noTTY {
+				fmt.Fprintln(os.Stderr, err.Error())
+			} else {
 				fmt.Println(errorStyle.Render(err.Error()))
-				return err
+			}
+			return err
 			}
 			fmt.Print(emailSummary(to, subject))
 			return nil
@@ -227,6 +256,7 @@ func init() {
 	rootCmd.Flags().BoolVarP(&smtpInsecureSkipVerify, "smtp.insecure", "i", envInsecureSkipVerify, "Skip TLS verification with SMTP server"+commentStyle.Render("($"+PopSMTPInsecureSkipVerify+")"))
 	envResendAPIKey := os.Getenv(ResendAPIKey)
 	rootCmd.Flags().StringVarP(&resendAPIKey, "resend.key", "r", envResendAPIKey, "API key for the Resend.com"+commentStyle.Render("($"+ResendAPIKey+")"))
+	rootCmd.Flags().BoolVarP(&noTTY, "no-tty", "n", false, "Don't use the interactive TUI, errors are written to STDERR")
 
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 
