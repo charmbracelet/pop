@@ -49,13 +49,19 @@ func (t *OAuthToken) expired() bool {
 
 // authFilePath returns the path to the OAuth token storage file.
 func authFilePath() (string, error) {
-	configDir, err := os.UserConfigDir()
+	dataDir, err := os.UserConfigDir()
 	if err != nil {
-		return "", fmt.Errorf("getting config directory: %w", err)
+		return "", fmt.Errorf("getting data directory: %w", err)
 	}
-	dir := filepath.Join(configDir, "pop")
+	// On Linux, use XDG_DATA_HOME (defaults to ~/.local/share) for token
+	// storage. On macOS and Windows, os.UserConfigDir() is the appropriate
+	// location (~Library/Application Support and %AppData% respectively).
+	if xdgData := os.Getenv("XDG_DATA_HOME"); xdgData != "" {
+		dataDir = xdgData
+	}
+	dir := filepath.Join(dataDir, "pop")
 	if err := os.MkdirAll(dir, 0o700); err != nil {
-		return "", fmt.Errorf("creating config directory: %w", err)
+		return "", fmt.Errorf("creating data directory: %w", err)
 	}
 	return filepath.Join(dir, "auth.json"), nil
 }
