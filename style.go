@@ -4,10 +4,10 @@ package main
 import (
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/lipgloss/v2"
 )
 
-const (
+var (
 	accentColor    = lipgloss.Color("99")
 	yellowColor    = lipgloss.Color("#ECFD66")
 	whiteColor     = lipgloss.Color("255")
@@ -24,7 +24,6 @@ var (
 	labelStyle       = lipgloss.NewStyle().Foreground(grayColor)
 
 	placeholderStyle = lipgloss.NewStyle().Foreground(darkGrayColor)
-	cursorStyle      = lipgloss.NewStyle().Foreground(whiteColor)
 
 	paddedStyle = lipgloss.NewStyle().Padding(1)
 

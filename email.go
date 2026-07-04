@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 	"github.com/resendlabs/resend-go"
 	mail "github.com/xhit/go-simple-mail/v2"
 	"github.com/yuin/goldmark"
