@@ -270,13 +270,15 @@ func startOAuthFlow() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
+	const localhost = "127.0.0.1"
+
 	lc := net.ListenConfig{}
-	listener, err := lc.Listen(ctx, "tcp", "127.0.0.1:0")
+	listener, err := lc.Listen(ctx, "tcp", localhost+":0")
 	if err != nil {
 		return fmt.Errorf("starting callback server: %w", err)
 	}
 	port := listener.Addr().(*net.TCPAddr).Port
-	redirectURI := fmt.Sprintf("http://127.0.0.1:%d%s", port, oauthRedirectPath)
+	redirectURI := fmt.Sprintf("http://%s:%d%s", localhost, port, oauthRedirectPath)
 
 	// Generate PKCE values and state.
 	codeVerifier, err := generateCodeVerifier()
@@ -290,7 +292,7 @@ func startOAuthFlow() error {
 	}
 
 	// Register the client dynamically.
-	clientID, err := registerClient(ctx, "http://127.0.0.1"+oauthRedirectPath)
+	clientID, err := registerClient(ctx, "http://"+localhost+oauthRedirectPath)
 	if err != nil {
 		return err
 	}
