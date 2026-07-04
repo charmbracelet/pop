@@ -36,19 +36,24 @@ const PopFrom = "POP_FROM"
 // PopSignature is the environment variable that sets the default signature.
 const PopSignature = "POP_SIGNATURE"
 
-// PopSMTPHost is the host for the SMTP server if the user is using the SMTP delivery method.
+// PopSMTPHost is the host for the SMTP server if the user is using the
+// SMTP delivery method.
 const PopSMTPHost = "POP_SMTP_HOST"
 
-// PopSMTPPort is the port for the SMTP server if the user is using the SMTP delivery method.
+// PopSMTPPort is the port for the SMTP server if the user is using the
+// SMTP delivery method.
 const PopSMTPPort = "POP_SMTP_PORT"
 
-// PopSMTPUsername is the username for the SMTP server if the user is using the SMTP delivery method.
+// PopSMTPUsername is the username for the SMTP server if the user is
+// using the SMTP delivery method.
 const PopSMTPUsername = "POP_SMTP_USERNAME"
 
-// PopSMTPPassword is the password for the SMTP server if the user is using the SMTP delivery method.
+// PopSMTPPassword is the password for the SMTP server if the user is
+// using the SMTP delivery method.
 const PopSMTPPassword = "POP_SMTP_PASSWORD" //nolint:gosec
 
-// PopSMTPEncryption is the encryption type for the SMTP server if the user is using the SMTP delivery method.
+// PopSMTPEncryption is the encryption type for the SMTP server if the
+// user is using the SMTP delivery method.
 const PopSMTPEncryption = "POP_SMTP_ENCRYPTION"
 
 // PopSMTPInsecureSkipVerify is whether or not to skip TLS verification for the
