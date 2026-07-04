@@ -21,8 +21,10 @@ var (
 	activeTextStyle = lipgloss.NewStyle().Foreground(whiteColor)
 	textStyle       = lipgloss.NewStyle().Foreground(lightGrayColor)
 
-	activeLabelStyle = lipgloss.NewStyle().Foreground(accentColor)
-	labelStyle       = lipgloss.NewStyle().Foreground(grayColor)
+	activeLabelStyle              = lipgloss.NewStyle().Foreground(accentColor)
+	labelStyle                    = lipgloss.NewStyle().Foreground(grayColor)
+	attachmentsTitleActiveStyle   = lipgloss.NewStyle().Foreground(charmtone.Blush)
+	attachmentsTitleInactiveStyle = lipgloss.NewStyle().Foreground(grayColor)
 
 	placeholderStyle = lipgloss.NewStyle().Foreground(darkGrayColor)
 
