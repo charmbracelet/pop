@@ -354,8 +354,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	m.updateKeymap()
-
 	var cmds []tea.Cmd
 	var cmd tea.Cmd
 	m.From, cmd = m.From.Update(msg)
@@ -391,6 +389,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 	case editingFrom, editingTo, editingCc, editingBcc, editingSubject, editingBody, hoveringSendButton:
 	}
+
+	m.updateKeymap()
 
 	m.help, cmd = m.help.Update(msg)
 	cmds = append(cmds, cmd)
