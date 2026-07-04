@@ -13,10 +13,11 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/pkg/browser"
 )
 
 const (
@@ -255,27 +256,11 @@ func doTokenRequest(req *http.Request) (*tokenResponse, error) {
 	return &tokResp, nil
 }
 
-// commandExists checks if a command is available in PATH.
-func commandExists(name string) bool {
-	_, err := exec.LookPath(name)
-	return err == nil
-}
-
-// runCommand runs a command without waiting for it to complete.
-func runCommand(ctx context.Context, name string, args ...string) error {
-	return exec.CommandContext(ctx, name, args...).Start() //nolint:wrapcheck // Start() error is not worth wrapping
-}
-
-// openBrowser opens the given URL in the user's default browser.
-func openBrowser(ctx context.Context, rawURL string) error {
-	switch {
-	case commandExists("open"):
-		return runCommand(ctx, "open", rawURL)
-	case commandExists("xdg-open"):
-		return runCommand(ctx, "xdg-open", rawURL)
-	default:
-		fmt.Printf("Please open this URL in your browser:\n  %s\n", rawURL)
-		return nil
+// openBrowser opens the given URL in the user's default browser. If the
+// browser can't be opened, the URL is printed for the user to open manually.
+func openBrowser(rawURL string) {
+	if err := browser.OpenURL(rawURL); err != nil {
+		fmt.Printf("Please open this URL to authenticate:\n  %s\n", rawURL)
 	}
 }
 
@@ -384,9 +369,8 @@ func startOAuthFlow() error {
 
 	// Open the browser.
 	fmt.Printf("Opening browser for authorization...\n")
-	if openErr := openBrowser(ctx, authURL.String()); openErr != nil {
-		fmt.Printf("Could not open browser automatically. Please open this URL:\n  %s\n", authURL.String())
-	}
+	openBrowser(authURL.String())
+	fmt.Printf("Browser not opening? Pay a visit to:\n  %s\n", authURL.String())
 
 	// Wait for the callback.
 	var authCode string

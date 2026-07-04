@@ -10,6 +10,7 @@ require (
 	github.com/charmbracelet/x/exp/ordered v0.1.0
 	github.com/muesli/mango-cobra v1.3.0
 	github.com/muesli/roff v0.1.0
+	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/resendlabs/resend-go v1.7.0
 	github.com/spf13/cobra v1.10.2
 	github.com/xhit/go-simple-mail/v2 v2.16.0
