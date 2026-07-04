@@ -2,6 +2,11 @@ version: "3"
 
 tasks:
   default:
+    desc: Run the project
+    cmds:
+      - go run . {{.CLI_ARGS}}
+
+  build:
     desc: Build the project
     cmds:
       - go build ./...
