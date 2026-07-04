@@ -14,6 +14,7 @@ import (
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+	"github.com/charmbracelet/x/exp/charmtone"
 	"github.com/charmbracelet/x/exp/ordered"
 	"github.com/resendlabs/resend-go"
 )
@@ -443,7 +444,7 @@ func (m *Model) focusActiveInput() {
 		m.Body.Focus()
 		m.Body.CursorEnd()
 	case editingAttachments:
-		m.Attachments.Styles.Title = activeLabelStyle
+		m.Attachments.Styles.Title = lipgloss.NewStyle().Foreground(charmtone.Blush)
 		m.Attachments.SetDelegate(attachmentDelegate{true})
 	case hoveringSendButton, pickingFile, sendingEmail:
 	}

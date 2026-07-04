@@ -5,15 +5,16 @@ import (
 	"strings"
 
 	"charm.land/lipgloss/v2"
+	"github.com/charmbracelet/x/exp/charmtone"
 )
 
 var (
-	accentColor    = lipgloss.Color("99")
-	yellowColor    = lipgloss.Color("#ECFD66")
-	whiteColor     = lipgloss.Color("255")
-	grayColor      = lipgloss.Color("241")
-	darkGrayColor  = lipgloss.Color("236")
-	lightGrayColor = lipgloss.Color("247")
+	accentColor    = charmtone.Charple
+	yellowColor    = charmtone.Zest
+	whiteColor     = charmtone.Soda
+	grayColor      = charmtone.Steam
+	darkGrayColor  = charmtone.Iron
+	lightGrayColor = charmtone.Squid
 )
 
 var (
@@ -27,16 +28,16 @@ var (
 
 	paddedStyle = lipgloss.NewStyle().Padding(1)
 
-	errorHeaderStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#F1F1F1")).Background(lipgloss.Color("#FF5F87")).Bold(true).Padding(0, 1).SetString("ERROR")
-	errorStyle       = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF5F87"))
-	commentStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("#757575")).PaddingLeft(1)
+	errorHeaderStyle = lipgloss.NewStyle().Foreground(charmtone.Soda).Background(charmtone.Coral).Bold(true).Padding(0, 1).SetString("ERROR")
+	errorStyle       = lipgloss.NewStyle().Foreground(charmtone.Coral)
+	commentStyle     = lipgloss.NewStyle().Foreground(charmtone.Oyster).PaddingLeft(1)
 
 	sendButtonActiveStyle   = lipgloss.NewStyle().Background(accentColor).Foreground(yellowColor).Padding(0, 2)
 	sendButtonInactiveStyle = lipgloss.NewStyle().Background(darkGrayColor).Foreground(lightGrayColor).Padding(0, 2)
 	sendButtonStyle         = lipgloss.NewStyle().Background(darkGrayColor).Foreground(grayColor).Padding(0, 2)
 
-	inlineCodeStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF5F87")).Background(lipgloss.Color("#3A3A3A")).Padding(0, 1)
-	linkStyle       = lipgloss.NewStyle().Foreground(lipgloss.Color("#00AF87")).Underline(true)
+	inlineCodeStyle = lipgloss.NewStyle().Foreground(charmtone.Coral).Background(charmtone.Char).Padding(0, 1)
+	linkStyle       = lipgloss.NewStyle().Foreground(charmtone.Guac).Underline(true)
 )
 
 // emailSummary returns a summary of the email that was sent. It is used when
