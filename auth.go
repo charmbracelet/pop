@@ -60,7 +60,7 @@ func authFilePath() (string, error) {
 		dataDir = xdgData
 	}
 	dir := filepath.Join(dataDir, "pop")
-	if err := os.MkdirAll(dir, 0o700); err != nil {
+	if err := os.MkdirAll(dir, 0o700); err != nil { //nolint:gosec // G703: dataDir is from a trusted source
 		return "", fmt.Errorf("creating data directory: %w", err)
 	}
 	return filepath.Join(dir, "auth.json"), nil

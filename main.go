@@ -22,6 +22,8 @@ import (
 // email body.
 const PopUnsafeHTML = "POP_UNSAFE_HTML"
 
+const envTrue = "true"
+
 // PopOAuthResend is the environment variable that enables OAuth-based
 // Resend delivery (as opposed to API key delivery).
 const PopOAuthResend = "POP_OAUTH_RESEND"
@@ -234,7 +236,7 @@ var AuthCmd = &cobra.Command{
 	Short: "Authenticate with Resend via OAuth",
 	Long:  `Authenticate with Resend using OAuth 2.0 with PKCE. This opens a browser for authorization and stores tokens locally.`,
 	Args:  cobra.NoArgs,
-	RunE: func(cmd *cobra.Command, _ []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		return startOAuthFlow()
 	},
 }
@@ -281,7 +283,7 @@ func init() {
 	rootCmd.Flags().StringVarP(&from, "from", "f", envFrom, "Email's sender"+commentStyle.Render("($"+PopFrom+")"))
 	rootCmd.Flags().StringVarP(&subject, "subject", "s", "", "Email's subject")
 	rootCmd.Flags().BoolVar(&preview, "preview", false, "Whether to preview the email before sending")
-	envUnsafe := os.Getenv(PopUnsafeHTML) == "true"
+	envUnsafe := os.Getenv(PopUnsafeHTML) == envTrue
 	rootCmd.Flags().BoolVarP(&unsafe, "unsafe", "u", envUnsafe, "Whether to allow unsafe HTML in the email body, also enable some extra markdown features (Experimental)")
 	envSignature := os.Getenv(PopSignature)
 	rootCmd.Flags().StringVarP(&signature, "signature", "x", envSignature, "Signature to display at the end of the email."+commentStyle.Render("($"+PopSignature+")"))
@@ -298,11 +300,11 @@ func init() {
 	rootCmd.Flags().StringVarP(&smtpPassword, "smtp.password", "p", envSMTPPassword, "Password of the SMTP server"+commentStyle.Render("($"+PopSMTPPassword+")"))
 	envSMTPEncryption := os.Getenv(PopSMTPEncryption)
 	rootCmd.Flags().StringVarP(&smtpEncryption, "smtp.encryption", "e", envSMTPEncryption, "Encryption type of the SMTP server (starttls, ssl, or none)"+commentStyle.Render("($"+PopSMTPEncryption+")"))
-	envInsecureSkipVerify := os.Getenv(PopSMTPInsecureSkipVerify) == "true"
+	envInsecureSkipVerify := os.Getenv(PopSMTPInsecureSkipVerify) == envTrue
 	rootCmd.Flags().BoolVarP(&smtpInsecureSkipVerify, "smtp.insecure", "i", envInsecureSkipVerify, "Skip TLS verification with SMTP server"+commentStyle.Render("($"+PopSMTPInsecureSkipVerify+")"))
 	envResendAPIKey := os.Getenv(ResendAPIKey)
 	rootCmd.Flags().StringVarP(&resendAPIKey, "resend.key", "r", envResendAPIKey, "API key for the Resend.com"+commentStyle.Render("($"+ResendAPIKey+")"))
-	envOAuthResend := os.Getenv(PopOAuthResend) == "true"
+	envOAuthResend := os.Getenv(PopOAuthResend) == envTrue
 	rootCmd.Flags().BoolVar(&oauthResend, "oauth", envOAuthResend, "Use OAuth for Resend authentication"+commentStyle.Render("($"+PopOAuthResend+")"))
 
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
