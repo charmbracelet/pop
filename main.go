@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"runtime/debug"
 	"strconv"
 	"strings"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 	mcobra "github.com/muesli/mango-cobra"
@@ -19,6 +21,10 @@ import (
 // PopUnsafeHTML is the environment variable that enables unsafe HTML in the
 // email body.
 const PopUnsafeHTML = "POP_UNSAFE_HTML"
+
+// PopOAuthResend is the environment variable that enables OAuth-based
+// Resend delivery (as opposed to API key delivery).
+const PopOAuthResend = "POP_OAUTH_RESEND"
 
 // ResendAPIKey is the environment variable that enables Resend as a delivery
 // method and uses it to send the email.
@@ -67,6 +73,7 @@ var (
 	smtpEncryption         string
 	smtpInsecureSkipVerify bool
 	resendAPIKey           string
+	oauthResend            bool
 )
 
 var rootCmd = &cobra.Command{
@@ -76,9 +83,31 @@ var rootCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		var deliveryMethod DeliveryMethod
 		switch {
+		case resendAPIKey != "" && smtpUsername != "" && smtpPassword != "" && oauthResend:
+			deliveryMethod = Unknown
 		case resendAPIKey != "" && smtpUsername != "" && smtpPassword != "":
 			deliveryMethod = Unknown
+		case resendAPIKey != "" && oauthResend:
+			deliveryMethod = Unknown
+		case smtpUsername != "" && smtpPassword != "" && oauthResend:
+			deliveryMethod = Unknown
 		case resendAPIKey != "":
+			deliveryMethod = Resend
+		case oauthResend:
+			token, err := getValidAccessToken()
+			if err != nil {
+				cmd.SilenceUsage = true
+				cmd.SilenceErrors = true
+				fmt.Println(errorStyle.Render(err.Error()))
+				return err
+			}
+			if token == "" {
+				fmt.Printf("\n  %s No OAuth token found. Run %s to authenticate.\n\n", errorHeaderStyle.String(), inlineCodeStyle.Render("pop auth"))
+				cmd.SilenceUsage = true
+				cmd.SilenceErrors = true
+				return errors.New("no OAuth token found")
+			}
+			resendAPIKey = token
 			deliveryMethod = Resend
 		case smtpUsername != "" && smtpPassword != "":
 			deliveryMethod = SMTP
@@ -89,11 +118,11 @@ var rootCmd = &cobra.Command{
 
 		switch deliveryMethod {
 		case None:
-			fmt.Printf("\n  %s %s %s\n\n", errorHeaderStyle.String(), inlineCodeStyle.Render(ResendAPIKey), "environment variable is required.")
-			fmt.Printf("  %s %s\n\n", commentStyle.Render("You can grab one at"), linkStyle.Render("https://resend.com/api-keys"))
+			fmt.Printf("\n  %s %s\n\n", errorHeaderStyle.String(), "Set a delivery method:"+"\n  • "+inlineCodeStyle.Render(ResendAPIKey)+" environment variable"+"\n  • "+inlineCodeStyle.Render("pop auth")+" for OAuth"+"\n  • "+inlineCodeStyle.Render("POP_SMTP_*")+" environment variables")
+			fmt.Printf("  %s %s\n\n", commentStyle.Render("You can grab an API key at"), linkStyle.Render("https://resend.com/api-keys"))
 			cmd.SilenceUsage = true
 			cmd.SilenceErrors = true
-			return errors.New("missing required environment variable")
+			return errors.New("missing delivery method")
 		case Unknown:
 			fmt.Printf("\n  %s Unknown delivery method.\n", errorHeaderStyle.String())
 			fmt.Printf("\n  You have set both %s and %s delivery methods.", inlineCodeStyle.Render(ResendAPIKey), inlineCodeStyle.Render("POP_SMPT_*"))
@@ -194,8 +223,49 @@ var ManCmd = &cobra.Command{
 	},
 }
 
+// AuthCmd is the cobra command for OAuth authentication with Resend.
+var AuthCmd = &cobra.Command{
+	Use:   "auth",
+	Short: "Authenticate with Resend via OAuth",
+	Long:  `Authenticate with Resend using OAuth 2.0 with PKCE. This opens a browser for authorization and stores tokens locally.`,
+	Args:  cobra.NoArgs,
+	RunE: func(cmd *cobra.Command, _ []string) error {
+		return startOAuthFlow()
+	},
+}
+
+// RevokeCmd is the cobra command for revoking OAuth tokens.
+var RevokeCmd = &cobra.Command{
+	Use:   "revoke",
+	Short: "Revoke OAuth authentication with Resend",
+	Long:  `Revokes and removes stored OAuth tokens for Resend.`,
+	Args:  cobra.NoArgs,
+	RunE: func(_ *cobra.Command, _ []string) error {
+		token, err := loadAuth()
+		if err != nil {
+			if os.IsNotExist(err) {
+				fmt.Println("No OAuth token found.")
+				return nil
+			}
+			return fmt.Errorf("loading auth: %w", err)
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		if err := revokeToken(ctx, token.ClientID, token.RefreshToken); err != nil {
+			fmt.Println(errorStyle.Render("Failed to revoke token: " + err.Error()))
+		}
+		if err := deleteAuth(); err != nil {
+			return fmt.Errorf("deleting auth: %w", err)
+		}
+		fmt.Println("Successfully revoked OAuth authentication.")
+		return nil
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(ManCmd)
+	rootCmd.AddCommand(AuthCmd)
+	AuthCmd.AddCommand(RevokeCmd)
 
 	rootCmd.Flags().StringSliceVar(&bcc, "bcc", []string{}, "BCC recipients")
 	rootCmd.Flags().StringSliceVar(&cc, "cc", []string{}, "CC recipients")
@@ -227,6 +297,8 @@ func init() {
 	rootCmd.Flags().BoolVarP(&smtpInsecureSkipVerify, "smtp.insecure", "i", envInsecureSkipVerify, "Skip TLS verification with SMTP server"+commentStyle.Render("($"+PopSMTPInsecureSkipVerify+")"))
 	envResendAPIKey := os.Getenv(ResendAPIKey)
 	rootCmd.Flags().StringVarP(&resendAPIKey, "resend.key", "r", envResendAPIKey, "API key for the Resend.com"+commentStyle.Render("($"+ResendAPIKey+")"))
+	envOAuthResend := os.Getenv(PopOAuthResend) == "true"
+	rootCmd.Flags().BoolVar(&oauthResend, "oauth", envOAuthResend, "Use OAuth for Resend authentication"+commentStyle.Render("($"+PopOAuthResend+")"))
 
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 
