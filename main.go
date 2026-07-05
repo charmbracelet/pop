@@ -91,11 +91,8 @@ var rootCmd = &cobra.Command{
 	Short: "Send emails from your terminal",
 	Long: `Pop is a tool for sending emails from your terminal.
 
-Run with no arguments to launch the interactive TUI:
-
-  pop
-
-Send non-interactively by providing all required flags (no TUI):
+Run with no arguments to launch the interactive TUI, or send email
+non-interactively on the CLI by providing all required flags:
 
   pop < message.md \
       --from me@example.com \
@@ -367,6 +364,7 @@ func init() {
 	rootCmd.AddCommand(ManCmd)
 	rootCmd.AddCommand(AuthCmd)
 	rootCmd.AddCommand(SkillCmd)
+	rootCmd.AddCommand(InstallSkillCmd)
 	AuthCmd.AddCommand(RevokeCmd)
 	AuthCmd.Flags().BoolVar(&oauthNoBrowser, "no-browser", false, "Simulate browser open failure (for testing)")
 
