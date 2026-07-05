@@ -34,41 +34,44 @@ pop < message.md \
 
 ---
 
+## Setup
+
 <img width="600" src="https://stuff.charm.sh/pop/resend-x-charm.png" alt="Resend and Charm logos">
 
-To use `pop`, you will need a `RESEND_API_KEY` or configure an
-[`SMTP`](#smtp-configuration) host.
+`pop` works great with [Resend](https://resend.com), and the quickest way to get
+started is to run to authenticate with Resend via OAuth:
 
-You can grab one from: https://resend.com/api-keys.
+```bash
+pop auth
+```
 
-### Resend Configuration
-
-To use the resend delivery method, set the `RESEND_API_KEY` environment
-variable.
+You can also set a `RESEND_API_KEY` in your environment:
 
 ```bash
 export RESEND_API_KEY=$(pass RESEND_API_KEY)
 ```
 
-### SMTP Configuration
+(You can get a Resend API key at https://resend.com/api-keys.)
+
+### SMTP
 
 To configure `pop` to use `SMTP`, you can set the following environment
 variables.
 
 ```bash
-export POP_SMTP_HOST=smtp.gmail.com
+export POP_SMTP_HOST="smtp.gmail.com"
 export POP_SMTP_PORT=587
-export POP_SMTP_USERNAME=pop@charm.sh
-export POP_SMTP_PASSWORD=hunter2
+export POP_SMTP_USERNAME="pop@charm.land"
+export POP_SMTP_PASSWORD="babyfrogsquad"
 ```
 
-### Environment
+### Other Settings
 
 To avoid typing your `From: ` email address, you can also set the `POP_FROM`
 environment to pre-fill the field anytime you launch `pop`.
 
 ```bash
-export POP_FROM=pop@charm.sh
+export POP_FROM="pop@charm.land"
 export POP_SIGNATURE="Sent with [Pop](https://github.com/charmbracelet/pop)!"
 ```
 
@@ -108,16 +111,16 @@ as:
 - [`charmbracelet/gum`](https://github.com/charmbracelet/gum)
 - [`maaslalani/invoice`](https://github.com/maaslalani/invoice)
 
-### Mods
+### Crush
 
-Use [`mods`](https://github.com/charmbracelet/mods) with `pop` to write an email
-body with AI:
+Use [`crush`](https://github.com/charmbracelet/crush) with `pop` to write an
+email body with AI:
 
 > **Note**: Use the `--preview` flag to preview the email and make changes
 > before sending.
 
 ```bash
-pop <<< "$(mods -f 'Explain why CLIs are awesome')" \
+pop <<< "$(crush run 'Explain why CLIs are awesome')" \
     --subject "The command line is the best" \
     --preview
 ```
@@ -132,7 +135,7 @@ Use [`gum`](https://github.com/charmbracelet/gum) with `pop` to choose an email
 to send to and from:
 
 ```bash
-pop --from $(gum choose "vt52@charm.sh" "vt78@charm.sh" "vt100@charm.sh")
+pop --from $(gum choose "vt50@charm.land" "vt78@charm.sh" "vt100@charm.sh")
     --to $(gum filter < contacts.txt)
 ```
 
@@ -160,8 +163,9 @@ pop --attach $FILENAME --body "See attached invoice."
 We’d love to hear your thoughts on this project. Feel free to drop us a note!
 
 - [Twitter](https://twitter.com/charmcli)
+- [Discord](https://charm.land/discord)
 - [The Fediverse](https://mastodon.social/@charmcli)
-- [Discord](https://charm.sh/chat)
+- [Slack](https://charm.land/slack)
 
 ## License
 
@@ -169,13 +173,13 @@ We’d love to hear your thoughts on this project. Feel free to drop us a note!
 
 ---
 
-Part of [Charm](https://charm.sh).
+Part of [Charm](https://charm.land).
 
-<a href="https://charm.sh/">
+<a href="https://charm.land/">
   <img
     alt="The Charm logo"
     width="400"
-    src="https://stuff.charm.sh/charm-badge.jpg"
+    src="https://stuff.charm.sh/charm-banner-softy.jpg"
   />
 </a>
 
