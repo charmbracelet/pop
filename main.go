@@ -89,7 +89,18 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "pop",
 	Short: "Send emails from your terminal",
-	Long:  `Pop is a tool for sending emails from your terminal.`,
+	Long: `Pop is a tool for sending emails from your terminal.
+
+Run with no arguments to launch the interactive TUI, or send email
+non-interactively on the CLI by providing all required flags:
+
+  pop < message.md \
+      --from me@example.com \
+      --to you@example.com \
+      --subject "Hello, world!" \
+      --attach invoice.pdf
+
+See "pop skill" for a full skill definition for AI agents.`,
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		var deliveryMethod DeliveryMethod
 		switch {
@@ -352,6 +363,8 @@ var RevokeCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(ManCmd)
 	rootCmd.AddCommand(AuthCmd)
+	rootCmd.AddCommand(SkillCmd)
+	rootCmd.AddCommand(InstallSkillCmd)
 	AuthCmd.AddCommand(RevokeCmd)
 	AuthCmd.Flags().BoolVar(&oauthNoBrowser, "no-browser", false, "Simulate browser open failure (for testing)")
 

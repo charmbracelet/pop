@@ -102,6 +102,26 @@ go install github.com/charmbracelet/pop@latest
 Or download a binary from the
 [releases](https://github.com/charmbracelet/pop/releases).
 
+## AI Agents and Skills
+
+AI agents work great with `pop`. `pop --help` is typically enough to get them
+going, but you can maximize their `pop` abilities with the builtin `pop skill`
+command, which you can just print to `stdout`, or write to disk:
+
+```bash
+mkdir -p .skills/pop
+pop skill > .skills/pop/SKILL.md
+```
+
+If you’re using [Crush](https://github.com/charmbracelet/crush), Claude Code,
+Codex, or Cursor, or Pi there’s also a `pop install-skill` command
+
+```bash
+pop install-skill crush  # install the Crush skill
+pop install-skill codex  # install the Codex skill
+pop install-skill --help # more info
+```
+
 ## Examples
 
 Pop can be combined with other tools to create powerful email pipelines, such
@@ -125,9 +145,9 @@ pop <<< "$(crush run 'Explain why CLIs are awesome')" \
     --preview
 ```
 
-<img width="600" src="https://vhs.charm.sh/vhs-1O3zo8Nsi2kPVW3vOBw4WH.gif" alt="Generate email with mods and send email with pop.">
+<img width="600" src="https://vhs.charm.sh/vhs-1O3zo8Nsi2kPVW3vOBw4WH.gif" alt="Generate email with Crush and send email with Pop.">
 
-- [`charmbracelet/mods`](https://github.com/charmbracelet/mods)
+- [`charmbracelet/crush`](https://github.com/charmbracelet/crush)
 
 ### Gum
 

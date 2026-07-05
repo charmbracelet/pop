@@ -76,7 +76,7 @@ func loadAuth() (*OAuthToken, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, err
+			return nil, err //nolint:wrapcheck // caller checks os.IsNotExist
 		}
 		return nil, fmt.Errorf("reading auth file: %w", err)
 	}
