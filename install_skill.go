@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/charmbracelet/colorprofile"
 	"github.com/spf13/cobra"
 )
 
@@ -20,6 +22,18 @@ const (
 type skillInstaller struct {
 	path    func() (string, error)
 	content func() string
+}
+
+// tildePath replaces the home directory prefix with ~/ for display.
+func tildePath(path string) string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return path
+	}
+	if path == home {
+		return "~"
+	}
+	return "~" + strings.TrimPrefix(path, home)
 }
 
 // crushSkillContent returns the standard Crush/Claude skill format.
@@ -108,44 +122,45 @@ func newInstallSkillTargetCmd(target string) *cobra.Command {
 		Use:   target,
 		Short: short,
 		Args:  cobra.NoArgs,
-		RunE: func(_ *cobra.Command, _ []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			cmd.SilenceUsage = true
+			cmd.SilenceErrors = true
 			return installSkill(target)
 		},
 	}
 }
 
 func installSkill(target string) error {
-	name := skillDisplayNames[target]
+	const gap = "  "
+	w := colorprofile.NewWriter(os.Stderr, os.Environ())
 	inst := skillInstallers[target]
 	path, err := inst.path()
 	if err != nil {
-		fmt.Printf("  %s Failed to resolve path for %s: %s\n",
-			errorHeaderStyle.String(), name, err)
+		_, _ = fmt.Fprintf(w, "\n%s%s %s\n\n", gap, errorHeaderStyle.String(), err)
 		return fmt.Errorf("resolving path: %w", err)
 	}
 
 	if _, err := os.Stat(path); err == nil && !installSkillForce {
-		fmt.Printf("  %s Already installed at %s (use --force to overwrite)\n",
-			errorHeaderStyle.String(),
-			path)
+		_, _ = fmt.Fprintf(w, "\n%s%s Skill already installed at %s\n\n",
+			gap, errorHeaderStyle.String(),
+			inlineCodeStyle.Render(tildePath(path)))
+		_, _ = fmt.Fprintf(w, "%sTo overwrite, use %s.\n\n", gap, inlineCodeStyle.Render("--force"))
 		return fmt.Errorf("skill already installed")
 	}
 
 	if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
-		fmt.Printf("  %s Failed to create directory for %s: %s\n",
-			errorHeaderStyle.String(), name, err)
+		_, _ = fmt.Fprintf(w, "\n%s%s %s\n\n", gap, errorHeaderStyle.String(), err)
 		return fmt.Errorf("creating directory: %w", err)
 	}
 
 	if err := os.WriteFile(path, []byte(inst.content()), 0o600); err != nil {
-		fmt.Printf("  %s Failed to write %s: %s\n",
-			errorHeaderStyle.String(), name, err)
+		_, _ = fmt.Fprintf(w, "\n%s%s %s\n\n", gap, errorHeaderStyle.String(), err)
 		return fmt.Errorf("writing skill: %w", err)
 	}
 
-	fmt.Printf("  %s Installed skill to %s\n",
+	_, _ = fmt.Fprintf(w, "  %s Installed skill to %s\n",
 		activeLabelStyle.Render("OK"),
-		path)
+		tildePath(path))
 	return nil
 }
 

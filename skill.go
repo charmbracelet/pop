@@ -8,7 +8,7 @@ import (
 )
 
 // popSkillDescription is the description used in skill frontmatter.
-const popSkillDescription = `Send emails from the terminal with the pop CLI. Use when the user asks to send, draft, or compose an email non-interactively, attach files to an email, configure email delivery via Resend or SMTP, or asks about pop commands and environment variables. Triggers on mentions of "pop" in the context of email, mailing, SMTP, or Resend.`
+const popSkillDescription = `Send emails from the terminal. Use when the user asks to send, draft, or compose an email, attach files to an email, configure email delivery via Resend or SMTP, or asks about pop commands and environment variables. Triggers on mentions of "pop" in the context of email, mailing, SMTP, or Resend.`
 
 //go:embed skill.md
 var popSkillBody string
