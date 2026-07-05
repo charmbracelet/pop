@@ -109,8 +109,8 @@ going, but you can maximize their `pop` abilities with the builtin `pop skill`
 command, which you can just print to `stdout`, or write to disk:
 
 ```bash
-mkdir -p ./.skills/pop
-pop skill > ./skills/pop/SKILL.md
+mkdir -p .skills/pop
+pop skill > .skills/pop/SKILL.md
 ```
 
 If you’re using [Crush](https://github.com/charmbracelet/crush), Claude Code,
