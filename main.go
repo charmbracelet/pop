@@ -124,6 +124,21 @@ var rootCmd = &cobra.Command{
 			if from == "" {
 				from = smtpUsername
 			}
+		default:
+			// No delivery method was explicitly configured. If we have a
+			// valid OAuth token from a previous `pop auth`, use it instead
+			// of showing setup instructions.
+			token, err := getValidAccessToken()
+			if err != nil {
+				cmd.SilenceUsage = true
+				cmd.SilenceErrors = true
+				fmt.Println(errorStyle.Render(err.Error()))
+				return err
+			}
+			if token != "" {
+				resendAPIKey = token
+				deliveryMethod = Resend
+			}
 		}
 
 		// We'll use this to print to stderr and downsample colors on the way,
