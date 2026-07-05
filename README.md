@@ -50,7 +50,6 @@ variable.
 export RESEND_API_KEY=$(pass RESEND_API_KEY)
 ```
 
-
 ### SMTP Configuration
 
 To configure `pop` to use `SMTP`, you can set the following environment
@@ -72,9 +71,9 @@ environment to pre-fill the field anytime you launch `pop`.
 export POP_FROM=pop@charm.sh
 export POP_SIGNATURE="Sent with [Pop](https://github.com/charmbracelet/pop)!"
 ```
-> **Note**:
-> If you wish to use a resend account without a custom domain, you can use
-> `onboarding@resend.dev` to send emails.
+
+> **Note**: If you wish to use a resend account without a custom domain, you can
+> use `onboarding@resend.dev` to send emails.
 
 ## Installation
 
@@ -97,11 +96,13 @@ Install with Go:
 go install github.com/charmbracelet/pop@latest
 ```
 
-Or download a binary from the [releases](https://github.com/charmbracelet/pop/releases).
+Or download a binary from the
+[releases](https://github.com/charmbracelet/pop/releases).
 
 ## Examples
 
-Pop can be combined with other tools to create powerful email pipelines, such as:
+Pop can be combined with other tools to create powerful email pipelines, such
+as:
 
 - [`charmbracelet/mods`](https://github.com/charmbracelet/mods)
 - [`charmbracelet/gum`](https://github.com/charmbracelet/gum)
@@ -109,10 +110,11 @@ Pop can be combined with other tools to create powerful email pipelines, such as
 
 ### Mods
 
-Use [`mods`](https://github.com/charmbracelet/mods) with `pop` to write an email body with AI:
+Use [`mods`](https://github.com/charmbracelet/mods) with `pop` to write an email
+body with AI:
 
-> **Note**:
-> Use the `--preview` flag to preview the email and make changes before sending.
+> **Note**: Use the `--preview` flag to preview the email and make changes
+> before sending.
 
 ```bash
 pop <<< "$(mods -f 'Explain why CLIs are awesome')" \
@@ -126,7 +128,8 @@ pop <<< "$(mods -f 'Explain why CLIs are awesome')" \
 
 ### Gum
 
-Use [`gum`](https://github.com/charmbracelet/gum) with `pop` to choose an email to send to and from:
+Use [`gum`](https://github.com/charmbracelet/gum) with `pop` to choose an email
+to send to and from:
 
 ```bash
 pop --from $(gum choose "vt52@charm.sh" "vt78@charm.sh" "vt100@charm.sh")
@@ -139,7 +142,8 @@ pop --from $(gum choose "vt52@charm.sh" "vt78@charm.sh" "vt100@charm.sh")
 
 ### Invoice
 
-Use [`invoice`](https://github.com/maaslalani/invoice) with `pop` to generate and send invoices entirely from the command line.
+Use [`invoice`](https://github.com/maaslalani/invoice) with `pop` to generate
+and send invoices entirely from the command line.
 
 ```bash
 FILENAME=invoice.pdf
