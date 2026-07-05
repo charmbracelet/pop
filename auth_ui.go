@@ -150,7 +150,7 @@ func startOAuthFlowTUI(noBrowser bool) error {
 }
 
 func authSuccessView() string {
-	return "\n  " + activeLabelStyle.Render("Success!") + " You're authenticated with Resend.\n"
+	return fmt.Sprintf("\n  %s %s\n", noticeHeaderStyle.SetString("OKAY!"), "You’re now authenticated with Resend")
 }
 
 func authCanceledView() string {
@@ -257,7 +257,7 @@ func (m authModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func authHeader() string {
-	return "\n  " + noticeHeaderStyle.SetString("Resend").String() + " Let's Auth"
+	return fmt.Sprintf("\n  %s %s", noticeHeaderStyle.SetString("Charm Pop"), "Let’s auth Resend")
 }
 
 // authWidth returns the usable text width for the auth TUI, accounting for

@@ -154,7 +154,7 @@ var rootCmd = &cobra.Command{
 
 			switch deliveryMethod {
 			case None:
-				_, _ = fmt.Fprintf(errWriter, "\n%s%s\n\n", gap, noticeHeaderStyle.SetString("Hi!"))
+				_, _ = fmt.Fprintf(errWriter, "\n%s%s Hello!\n\n", gap, noticeHeaderStyle.SetString("Charm Pop"))
 				p("Pop’s a simple tool for sending email in your termnial. To get going you’ll need to either configure either SMTP or Resend.")
 				p("To use Resend, authenticate with " + inlineCodeStyle.Render("pop auth") + ".")
 				p("To use SMTP, set the following in your environment:")
