@@ -278,6 +278,9 @@ var AuthCmd = &cobra.Command{
 	Long:  `Authenticate with Resend using OAuth 2.0 with PKCE. This opens a browser for authorization and stores tokens locally.`,
 	Args:  cobra.NoArgs,
 	RunE: func(_ *cobra.Command, _ []string) error {
+		if term.IsTerminal(os.Stdin.Fd()) {
+			return startOAuthFlowTUI()
+		}
 		return startOAuthFlow()
 	},
 }

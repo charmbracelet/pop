@@ -32,6 +32,8 @@ const (
 	oauthGrantTypeRefreshToken = "refresh_token"
 	oauthResponseType          = "code"
 	oauthParamClientID         = "client_id"
+	oauthParamRedirectURI      = "redirect_uri"
+	oauthParamScope            = "scope"
 )
 
 // OAuthToken stores the persisted OAuth tokens and client registration.
@@ -143,7 +145,7 @@ func registerClient(ctx context.Context, redirectURI string) (string, error) {
 		"grant_types":                []string{oauthGrantTypeAuthCode, oauthGrantTypeRefreshToken},
 		"response_types":             []string{oauthResponseType},
 		"token_endpoint_auth_method": "none",
-		"scope":                      oauthScope,
+		oauthParamScope:              oauthScope,
 	}
 	data, err := json.Marshal(body)
 	if err != nil {
@@ -188,11 +190,11 @@ type tokenResponse struct {
 // exchangeCode exchanges an authorization code for tokens.
 func exchangeCode(ctx context.Context, clientID, code, redirectURI, codeVerifier string) (*tokenResponse, error) {
 	form := url.Values{
-		"grant_type":       {oauthGrantTypeAuthCode},
-		oauthParamClientID: {clientID},
-		oauthResponseType:  {code},
-		"redirect_uri":     {redirectURI},
-		"code_verifier":    {codeVerifier},
+		"grant_type":          {oauthGrantTypeAuthCode},
+		oauthParamClientID:    {clientID},
+		oauthResponseType:     {code},
+		oauthParamRedirectURI: {redirectURI},
+		"code_verifier":       {codeVerifier},
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, resendAPIBase+"/oauth/token", strings.NewReader(form.Encode()))
@@ -311,8 +313,8 @@ func startOAuthFlow() error {
 	params := url.Values{
 		oauthParamClientID:      {clientID},
 		"response_type":         {oauthResponseType},
-		"redirect_uri":          {redirectURI},
-		"scope":                 {oauthScope},
+		oauthParamRedirectURI:   {redirectURI},
+		oauthParamScope:         {oauthScope},
 		"state":                 {state},
 		"code_challenge":        {codeChallenge},
 		"code_challenge_method": {"S256"},
