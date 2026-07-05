@@ -87,6 +87,7 @@ type authModel struct {
 	err      error
 	canceled bool
 	quitting bool
+	width    int
 }
 
 // authCallbackResult is pushed onto the result channel by the HTTP callback
@@ -237,6 +238,7 @@ func (m authModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case tea.WindowSizeMsg:
+		m.width = msg.Width
 		m.help.SetWidth(msg.Width)
 		return m, nil
 
@@ -264,7 +266,18 @@ func (m authModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func authHeader() string {
-	return "\n  " + activeLabelStyle.Render("Authenticate with Resend")
+	return "\n  " + noticeHeaderStyle.SetString("Resend").String() + " Let's Auth"
+}
+
+// authWidth returns the usable text width for the auth TUI, accounting for
+// the 2-space indent. Falls back to 80 when the terminal width is unknown.
+func (m authModel) authWidth() int {
+	const indent = 2 //nolint:mnd
+	w := m.width - indent
+	if w < 20 { //nolint:mnd
+		w = 80 - indent
+	}
+	return w
 }
 
 // View renders the auth TUI.
@@ -274,20 +287,26 @@ func (m authModel) View() tea.View {
 	}
 
 	var content string
+	wrap := lipgloss.NewStyle().MaxWidth(m.authWidth())
 	switch m.state {
 	case authStateIntro:
-		content = authHeader() + "\n\n  To authenticate we’re going to open the browser. Ready?"
+		content = authHeader() + "\n\n  " + wrap.Render("To authenticate we’re going to open the browser. Ready?")
 	case authStatePreparing:
-		content = authHeader() + "\n\n  " + m.spinner.View() + "Preparing..."
+		content = authHeader() + "\n\n  " + m.spinner.View() + wrap.Render("Preparing...")
 	case authStateWaiting:
-		content = authHeader() + "\n\n  " + m.spinner.View() + "Waiting for authorization..."
+		content = authHeader() + "\n\n  " + m.spinner.View() + wrap.Render("Waiting for authorization...")
 		if m.browserFailed {
-			content += "\n\n  Visit the following URL to authenticate:\n  " + lipgloss.NewStyle().Hyperlink(m.authURL).Render(m.authURL)
+			urlStyle := lipgloss.NewStyle().
+				Foreground(charmtone.Guac).
+				Underline(true).
+				Hyperlink(m.authURL).
+				MaxWidth(m.authWidth())
+			content += "\n\n  " + wrap.Render("Visit the following URL to authenticate:") + "\n  " + urlStyle.Render(m.authURL)
 		}
 	case authStateExchanging:
-		content = authHeader() + "\n\n  " + m.spinner.View() + "Exchanging token..."
+		content = authHeader() + "\n\n  " + m.spinner.View() + wrap.Render("Exchanging token...")
 	case authStateError:
-		content = authHeader() + "\n\n  " + errorStyle.Render(m.err.Error())
+		content = authHeader() + "\n\n  " + errorStyle.Render(wrap.Render(m.err.Error()))
 	default:
 		return tea.NewView("")
 	}
