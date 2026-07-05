@@ -41,3 +41,13 @@ tasks:
     cmds:
       - gofumpt -w .
       - goimports -w .
+
+  auth:
+    desc: Authenticate with Resend via OAuth
+    cmds:
+      - go run . auth
+
+  auth:nobrowser:
+    desc: Authenticate with Resend via OAuth (simulates browser failure)
+    cmds:
+      - go run . auth --no-browser
