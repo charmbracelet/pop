@@ -126,7 +126,7 @@ Pop can generate and install skill definitions for AI agents:
 - `pop install-skill <target>` — Installs to a specific agent's rules directory
 
 The skill body lives in `skill.md` and is embedded at build time via
-`//go:embed`. Supported targets: `crush`, `claude`, `codex`, `cursor`. Each
+`//go:embed`. Supported targets: `crush`, `claude`, `codex`, `cursor`, `pi`. Each
 target writes to the correct path and format for that agent.
 
 ## Conventions

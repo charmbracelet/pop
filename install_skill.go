@@ -16,6 +16,7 @@ const (
 	targetClaude = "claude"
 	targetCodex  = "codex"
 	targetCursor = "cursor"
+	targetPi     = "pi"
 )
 
 // skillInstaller resolves the destination path and formats content for a given agent.
@@ -32,6 +33,9 @@ func tildePath(path string) string {
 	}
 	if path == home {
 		return "~"
+	}
+	if !strings.HasPrefix(path, home) {
+		return path
 	}
 	return "~" + strings.TrimPrefix(path, home)
 }
@@ -88,6 +92,12 @@ var skillInstallers = map[string]skillInstaller{
 		},
 		content: func() string { return popSkillBody },
 	},
+	targetPi: {
+		path: func() (string, error) {
+			return filepath.Join(".pi", "skills", "pop.md"), nil
+		},
+		content: crushSkillContent,
+	},
 }
 
 // skillDisplayNames maps internal target names to their product display names.
@@ -96,10 +106,11 @@ var skillDisplayNames = map[string]string{
 	targetClaude: "Claude Code",
 	targetCodex:  "OpenAI Codex",
 	targetCursor: "Cursor",
+	targetPi:     "Pi",
 }
 
 // skillTargetOrder is the order targets appear in help output.
-var skillTargetOrder = []string{targetCrush, targetClaude, targetCodex, targetCursor}
+var skillTargetOrder = []string{targetCrush, targetClaude, targetCodex, targetCursor, targetPi}
 
 var installSkillForce bool
 
@@ -115,7 +126,7 @@ var InstallSkillCmd = &cobra.Command{
 func newInstallSkillTargetCmd(target string) *cobra.Command {
 	name := skillDisplayNames[target]
 	short := fmt.Sprintf("Install the Pop skill for %s", name)
-	if target == targetCursor {
+	if target == targetCursor || target == targetPi {
 		short = fmt.Sprintf("Install the Pop skill for %s (in the current directory)", name)
 	}
 	return &cobra.Command{
