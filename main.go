@@ -83,6 +83,7 @@ var (
 	smtpInsecureSkipVerify bool
 	resendAPIKey           string
 	oauthResend            bool
+	oauthNoBrowser         bool
 )
 
 var rootCmd = &cobra.Command{
@@ -279,7 +280,7 @@ var AuthCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	RunE: func(_ *cobra.Command, _ []string) error {
 		if term.IsTerminal(os.Stdin.Fd()) {
-			return startOAuthFlowTUI()
+			return startOAuthFlowTUI(oauthNoBrowser)
 		}
 		return startOAuthFlow()
 	},
@@ -317,6 +318,7 @@ func init() {
 	rootCmd.AddCommand(ManCmd)
 	rootCmd.AddCommand(AuthCmd)
 	AuthCmd.AddCommand(RevokeCmd)
+	AuthCmd.Flags().BoolVar(&oauthNoBrowser, "no-browser", false, "Simulate browser open failure (for testing)")
 
 	rootCmd.Flags().StringSliceVar(&bcc, "bcc", []string{}, "BCC recipients")
 	rootCmd.Flags().StringSliceVar(&cc, "cc", []string{}, "CC recipients")

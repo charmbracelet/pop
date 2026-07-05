@@ -13,6 +13,9 @@ import (
 	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
+	"github.com/charmbracelet/x/exp/charmtone"
+	"github.com/pkg/browser"
 )
 
 // authState represents the state of the OAuth TUI flow.
@@ -67,11 +70,12 @@ type authModel struct {
 
 	spinner spinner.Model
 
-	clientID     string
-	codeVerifier string
-	oauthState   string
-	redirectURI  string
-	authURL      string
+	clientID      string
+	codeVerifier  string
+	oauthState    string
+	redirectURI   string
+	authURL       string
+	browserFailed bool
 
 	resultCh chan authCallbackResult
 	server   *http.Server
@@ -115,15 +119,16 @@ type authErrMsg struct {
 	err error
 }
 
-func newAuthModel() authModel {
+func newAuthModel(noBrowser bool) authModel {
 	s := spinner.New()
-	s.Style = activeLabelStyle
+	s.Style = lipgloss.NewStyle().Foreground(charmtone.Julep)
 	s.Spinner = spinner.Dot
 	m := authModel{
-		state:   authStateIntro,
-		spinner: s,
-		help:    help.New(),
-		keymap:  defaultAuthKeybinds(),
+		state:         authStateIntro,
+		spinner:       s,
+		help:          help.New(),
+		keymap:        defaultAuthKeybinds(),
+		browserFailed: noBrowser,
 	}
 	m.updateAuthKeymap()
 	return m
@@ -131,8 +136,8 @@ func newAuthModel() authModel {
 
 // startOAuthFlowTUI runs the OAuth authorization flow with a small TUI that
 // guides the user through opening a browser and waiting for the callback.
-func startOAuthFlowTUI() error {
-	p := tea.NewProgram(newAuthModel())
+func startOAuthFlowTUI(noBrowser bool) error {
+	p := tea.NewProgram(newAuthModel(noBrowser))
 	final, err := p.Run()
 	if err != nil {
 		return fmt.Errorf("running auth program: %w", err)
@@ -176,7 +181,9 @@ func (m authModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.authURL = msg.authURL
 		m.resultCh = msg.resultCh
 		m.server = msg.server
-		openBrowser(m.authURL)
+		if !m.browserFailed {
+			m.browserFailed = browser.OpenURL(m.authURL) != nil
+		}
 		m.state = authStateWaiting
 		m.updateAuthKeymap()
 		return m, tea.Batch(waitForCallbackCmd(m.resultCh), m.spinner.Tick)
@@ -269,11 +276,14 @@ func (m authModel) View() tea.View {
 	var content string
 	switch m.state {
 	case authStateIntro:
-		content = authHeader() + "\n\n  A browser will open so you can authorize Pop to send\n  emails on your behalf via Resend.\n\n  Press " + activeLabelStyle.Render("Enter") + " to continue."
+		content = authHeader() + "\n\n  To authenticate we’re going to open the browser. Ready?"
 	case authStatePreparing:
 		content = authHeader() + "\n\n  " + m.spinner.View() + "Preparing..."
 	case authStateWaiting:
 		content = authHeader() + "\n\n  " + m.spinner.View() + "Waiting for authorization..."
+		if m.browserFailed {
+			content += "\n\n  Visit the following URL to authenticate:\n  " + lipgloss.NewStyle().Hyperlink(m.authURL).Render(m.authURL)
+		}
 	case authStateExchanging:
 		content = authHeader() + "\n\n  " + m.spinner.View() + "Exchanging token..."
 	case authStateError:
