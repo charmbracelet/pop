@@ -209,6 +209,10 @@ var rootCmd = &cobra.Command{
 			return nil
 		}
 
+		if !term.IsTerminal(os.Stdin.Fd()) {
+			return cmd.Usage()
+		}
+
 		p := tea.NewProgram(NewModel(resend.SendEmailRequest{
 			From:        from,
 			To:          to,
