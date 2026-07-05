@@ -278,9 +278,29 @@ var AuthCmd = &cobra.Command{
 	Short: "Authenticate with Resend via OAuth",
 	Long:  `Authenticate with Resend using OAuth 2.0 with PKCE. This opens a browser for authorization and stores tokens locally.`,
 	Args:  cobra.NoArgs,
-	RunE: func(_ *cobra.Command, _ []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		if term.IsTerminal(os.Stdin.Fd()) {
-			return startOAuthFlowTUI(oauthNoBrowser)
+			if err := startOAuthFlowTUI(oauthNoBrowser); err != nil {
+				cmd.SilenceUsage = true
+				cmd.SilenceErrors = true
+
+				errWriter := colorprofile.NewWriter(os.Stderr, os.Environ())
+				paragraph := paragraphStyle
+				if width, _, szErr := term.GetSize(os.Stderr.Fd()); szErr == nil {
+					paragraph = paragraph.Width(width - paragraph.GetHorizontalFrameSize())
+				}
+
+				var httpErr *HTTPError
+				if errors.As(err, &httpErr) {
+					fmt.Fprintf(errWriter, "\n  %s %s\n\n", errorHeaderStyle.String(), httpErr.Status)
+					fmt.Fprintf(errWriter, "%s\n\n", paragraph.Render(httpErr.Body))
+				} else {
+					fmt.Fprintf(errWriter, "\n  %s\n\n", errorHeaderStyle.String())
+					fmt.Fprintf(errWriter, "%s\n\n", paragraph.Render(err.Error()))
+				}
+				return err
+			}
+			return nil
 		}
 		return startOAuthFlow()
 	},

@@ -166,7 +166,7 @@ func registerClient(ctx context.Context, redirectURI string) (string, error) {
 
 	if resp.StatusCode != http.StatusCreated {
 		respBody, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("client registration failed: %s: %s", resp.Status, string(respBody))
+		return "", &HTTPError{Status: resp.Status, Body: string(respBody)}
 	}
 
 	var result struct {
@@ -176,6 +176,16 @@ func registerClient(ctx context.Context, redirectURI string) (string, error) {
 		return "", fmt.Errorf("decoding registration response: %w", err)
 	}
 	return result.ClientID, nil
+}
+
+// HTTPError represents a non-successful HTTP response from the Resend API.
+type HTTPError struct {
+	Status string // e.g. "429 Too Many Requests"
+	Body   string // response body
+}
+
+func (e *HTTPError) Error() string {
+	return e.Status + ": " + e.Body
 }
 
 // tokenResponse is the response from the token endpoint.
@@ -254,7 +264,7 @@ func doTokenRequest(req *http.Request) (*tokenResponse, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("token exchange failed: %s: %s", resp.Status, string(body))
+		return nil, &HTTPError{Status: resp.Status, Body: string(body)}
 	}
 
 	var tokResp tokenResponse
