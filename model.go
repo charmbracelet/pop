@@ -507,40 +507,42 @@ func (m Model) View() tea.View {
 	switch m.state {
 	case editingFrom:
 		if c := m.From.Cursor(); c != nil {
-			c.Position.Y += padY
-			c.Position.X += padX
+			c.Y += padY
+			c.X += padX
 			v.Cursor = c
 		}
 	case editingTo:
 		if c := m.To.Cursor(); c != nil {
-			c.Position.Y += padY + 1
-			c.Position.X += padX
+			c.Y += padY + 1
+			c.X += padX
 			v.Cursor = c
 		}
 	case editingCc:
 		if c := m.Cc.Cursor(); c != nil {
-			c.Position.Y += padY + 2
-			c.Position.X += padX
+			c.Y += padY + 2
+			c.X += padX
 			v.Cursor = c
 		}
 	case editingBcc:
 		if c := m.Bcc.Cursor(); c != nil {
-			c.Position.Y += padY + 3
-			c.Position.X += padX
+			c.Y += padY + 3
+			c.X += padX
 			v.Cursor = c
 		}
 	case editingSubject:
 		if c := m.Subject.Cursor(); c != nil {
-			c.Position.Y += padY + ccLines + 2
-			c.Position.X += padX
+			c.Y += padY + ccLines + 2
+			c.X += padX
 			v.Cursor = c
 		}
 	case editingBody:
 		if c := m.Body.Cursor(); c != nil {
-			c.Position.Y += padY + ccLines + 4
-			c.Position.X += padX
+			c.Y += padY + ccLines + 4
+			c.X += padX
 			v.Cursor = c
 		}
+	case editingAttachments, hoveringSendButton, pickingFile, sendingEmail:
+		// No cursor positioning needed for these states.
 	}
 
 	return v

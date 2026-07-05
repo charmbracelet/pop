@@ -30,16 +30,47 @@ var (
 
 	paddedStyle = lipgloss.NewStyle().Padding(1)
 
-	errorHeaderStyle = lipgloss.NewStyle().Foreground(charmtone.Soda).Background(charmtone.Coral).Bold(true).Padding(0, 1).SetString("ERROR")
-	errorStyle       = lipgloss.NewStyle().Foreground(charmtone.Coral)
-	commentStyle     = lipgloss.NewStyle().Foreground(charmtone.Oyster).PaddingLeft(1)
+	errorHeaderStyle = lipgloss.NewStyle().
+				Foreground(charmtone.Soda).
+				Background(charmtone.Coral).
+				Bold(true).
+				Padding(0, 1).
+				SetString("ERROR")
+	errorStyle = lipgloss.NewStyle().
+			Foreground(charmtone.Coral)
 
-	sendButtonActiveStyle   = lipgloss.NewStyle().Background(accentColor).Foreground(yellowColor).Padding(0, 2)
-	sendButtonInactiveStyle = lipgloss.NewStyle().Background(darkGrayColor).Foreground(lightGrayColor).Padding(0, 2)
-	sendButtonStyle         = lipgloss.NewStyle().Background(darkGrayColor).Foreground(grayColor).Padding(0, 2)
+	// Headers in CLI output.
+	noticeHeaderStyle = errorHeaderStyle.
+				Background(charmtone.Charple)
 
-	inlineCodeStyle = lipgloss.NewStyle().Foreground(charmtone.Coral).Background(charmtone.Char).Padding(0, 1)
-	linkStyle       = lipgloss.NewStyle().Foreground(charmtone.Guac).Underline(true)
+	// Paragraphs in CLI output.
+	paragraphStyle = lipgloss.NewStyle().
+			Padding(0, 2).
+			Width(80)
+
+	commentStyle = lipgloss.NewStyle().
+			Foreground(charmtone.Oyster).PaddingLeft(1)
+
+	sendButtonActiveStyle = lipgloss.NewStyle().
+				Background(accentColor).
+				Foreground(yellowColor).
+				Padding(0, 2)
+	sendButtonInactiveStyle = lipgloss.NewStyle().
+				Background(darkGrayColor).
+				Foreground(lightGrayColor).
+				Padding(0, 2)
+	sendButtonStyle = lipgloss.NewStyle().
+			Background(darkGrayColor).
+			Foreground(grayColor).
+			Padding(0, 2)
+
+	inlineCodeStyle = lipgloss.NewStyle().
+			Foreground(charmtone.Coral).
+			Background(charmtone.Char).
+			Padding(0, 1)
+	linkStyle = lipgloss.NewStyle().
+			Foreground(charmtone.Guac).
+			Underline(true)
 )
 
 // emailSummary returns a summary of the email that was sent. It is used when
