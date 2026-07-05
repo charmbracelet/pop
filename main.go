@@ -12,6 +12,8 @@ import (
 	"time"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/charmbracelet/colorprofile"
+	"github.com/charmbracelet/x/term"
 	mcobra "github.com/muesli/mango-cobra"
 	"github.com/muesli/roff"
 	"github.com/resendlabs/resend-go"
@@ -123,21 +125,56 @@ var rootCmd = &cobra.Command{
 			}
 		}
 
-		switch deliveryMethod {
-		case None:
-			fmt.Printf("\n  %s %s\n\n", errorHeaderStyle.String(), "Set a delivery method:"+"\n  • "+inlineCodeStyle.Render(ResendAPIKey)+" environment variable"+"\n  • "+inlineCodeStyle.Render("pop auth")+" for OAuth"+"\n  • "+inlineCodeStyle.Render("POP_SMTP_*")+" environment variables")
-			fmt.Printf("  %s %s\n\n", commentStyle.Render("You can grab an API key at"), linkStyle.Render("https://resend.com/api-keys"))
-			cmd.SilenceUsage = true
-			cmd.SilenceErrors = true
-			return errors.New("missing delivery method")
-		case Unknown:
-			fmt.Printf("\n  %s Unknown delivery method.\n", errorHeaderStyle.String())
-			fmt.Printf("\n  You have set both %s and %s delivery methods.", inlineCodeStyle.Render(ResendAPIKey), inlineCodeStyle.Render("POP_SMPT_*"))
-			fmt.Printf("\n  Set only one of these environment variables.\n\n")
-			cmd.SilenceUsage = true
-			cmd.SilenceErrors = true
-			return errors.New("unknown delivery method")
-		case Resend, SMTP:
+		// We'll use this to print to stderr and downsample colors on the way,
+		// if needed.
+		errWriter := colorprofile.NewWriter(os.Stderr, os.Environ())
+
+		{
+			const gap = "  "
+
+			// Set output paragraph width based on the terminal size, if we can.
+			paragraph := paragraphStyle
+			if width, _, err := term.GetSize(os.Stderr.Fd()); err == nil {
+				paragraph = paragraph.Width(width - paragraph.GetHorizontalFrameSize())
+			}
+
+			p := func(s string) {
+				_, _ = fmt.Fprintf(errWriter, "%s\n\n", paragraph.Render(s))
+			}
+
+			bullet := func(name, note string) {
+				var s strings.Builder
+				fmt.Fprintf(&s, "%s• %s", gap, inlineCodeStyle.Render(name))
+				if note != "" {
+					fmt.Fprintf(&s, " %s", note)
+				}
+				_, _ = fmt.Fprintln(errWriter, s.String())
+			}
+
+			switch deliveryMethod {
+			case None:
+				_, _ = fmt.Fprintf(errWriter, "\n%s%s\n\n", gap, noticeHeaderStyle.SetString("Hi!"))
+				p("Pop’s a simple tool for sending email in your termnial. To get going you’ll need to either configure either SMTP or Resend.")
+				p("To use Resend, authenticate with " + inlineCodeStyle.Render("pop auth") + ".")
+				p("To use SMTP, set the following in your environment:")
+				bullet("POP_SMTP_HOST", "")
+				bullet("POP_SMTP_PORT", "(defaults to 587)")
+				bullet("POP_SMTP_HOST", "")
+				bullet("POP_SMTP_ENCRYPTION", "(starttls, ssl, or none)")
+				bullet("POP_SMTP_INSECURE_SKIP_VERIFY", "(starttls, ssl, or none)")
+				_, _ = fmt.Fprintln(errWriter)
+				cmd.SilenceUsage = true
+				cmd.SilenceErrors = true
+				return errors.New("missing delivery method")
+			case Unknown:
+				fmt.Fprintf(errWriter, "\n%s%s Unknown delivery method.\n\n", gap, errorHeaderStyle)
+				p("You have set both %s and %s delivery methods: " + inlineCodeStyle.Render(ResendAPIKey) + " and " + inlineCodeStyle.Render("POP_SMPT_*"))
+				p("Set only one of these environment variables.")
+				cmd.SilenceUsage = true
+				cmd.SilenceErrors = true
+				return errors.New("unknown delivery method")
+			case Resend, SMTP:
+			}
 		}
 
 		if body == "" && hasStdin() {
@@ -165,10 +202,10 @@ var rootCmd = &cobra.Command{
 			if err != nil {
 				cmd.SilenceUsage = true
 				cmd.SilenceErrors = true
-				fmt.Println(errorStyle.Render(err.Error()))
+				_, _ = fmt.Fprintln(errWriter, errorStyle.Render(err.Error()))
 				return err
 			}
-			fmt.Print(emailSummary(to, subject))
+			_, _ = fmt.Print(emailSummary(to, subject))
 			return nil
 		}
 
