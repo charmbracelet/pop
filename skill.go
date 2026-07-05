@@ -25,7 +25,7 @@ var popSkill = "---\n" +
 var SkillCmd = &cobra.Command{
 	Use:   "skill",
 	Short: "Print a skill definition for AI agents",
-	Long:  `Print a Crush-compatible skill that teaches AI agents how to use pop non-interactively.`,
+	Long:  `Print a skill that teaches AI agents how to use Pop non-interactively.`,
 	Args:  cobra.NoArgs,
 	RunE: func(_ *cobra.Command, _ []string) error {
 		fmt.Print(popSkill)
