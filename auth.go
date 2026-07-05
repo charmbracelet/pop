@@ -16,13 +16,12 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/pkg/browser"
 )
 
 const (
 	resendAPIBase       = "https://api.resend.com"
 	oauthRedirectPath   = "/oauth/callback"
+	oauthCallbackHost   = "127.0.0.1"
 	oauthScope          = "emails:send"
 	oauthClientName     = "Pop"
 	tokenRefreshRefresh = 5 * time.Minute
@@ -274,51 +273,33 @@ func doTokenRequest(req *http.Request) (*tokenResponse, error) {
 	return &tokResp, nil
 }
 
-// openBrowser opens the given URL in the user's default browser. If the
-// browser can't be opened, the URL is printed for the user to open manually.
-func openBrowser(rawURL string) {
-	if err := browser.OpenURL(rawURL); err != nil {
-		fmt.Printf("Please open this URL to authenticate:\n  %s\n", rawURL)
-	}
+// callbackResult is pushed onto the callback channel by the OAuth callback
+// HTTP handler. Both the TUI and the non-interactive CLI flows consume it.
+type callbackResult struct {
+	code string
+	err  error
 }
 
-// startOAuthFlow performs the full OAuth authorization flow:
-// DCR → start callback server → open browser → exchange code → save tokens.
-func startOAuthFlow() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-
-	const localhost = "127.0.0.1"
-
+// openCallbackListener binds an ephemeral loopback port for the OAuth redirect
+// and returns the listener along with the redirect URI to advertise to the
+// provider.
+func openCallbackListener(ctx context.Context) (net.Listener, string, error) {
 	lc := net.ListenConfig{}
-	listener, err := lc.Listen(ctx, "tcp", localhost+":0")
+	listener, err := lc.Listen(ctx, "tcp", oauthCallbackHost+":0")
 	if err != nil {
-		return fmt.Errorf("starting callback server: %w", err)
+		return nil, "", fmt.Errorf("starting callback server: %w", err)
 	}
 	port := listener.Addr().(*net.TCPAddr).Port
-	redirectURI := fmt.Sprintf("http://%s:%d%s", localhost, port, oauthRedirectPath)
+	redirectURI := fmt.Sprintf("http://%s:%d%s", oauthCallbackHost, port, oauthRedirectPath)
+	return listener, redirectURI, nil
+}
 
-	// Generate PKCE values and state.
-	codeVerifier, err := generateCodeVerifier()
-	if err != nil {
-		return err
-	}
-	codeChallenge := generateCodeChallenge(codeVerifier)
-	state, err := generateState()
-	if err != nil {
-		return err
-	}
-
-	// Register the client dynamically.
-	clientID, err := registerClient(ctx, "http://"+localhost+oauthRedirectPath)
-	if err != nil {
-		return err
-	}
-
-	// Build the authorization URL.
+// buildAuthURL constructs the Resend authorization endpoint URL with the
+// PKCE parameters required by the code flow.
+func buildAuthURL(clientID, redirectURI, state, codeChallenge string) (string, error) {
 	authURL, err := url.Parse(resendAPIBase + "/oauth/authorize")
 	if err != nil {
-		return fmt.Errorf("parsing authorization URL: %w", err)
+		return "", fmt.Errorf("parsing authorization URL: %w", err)
 	}
 	params := url.Values{
 		oauthParamClientID:      {clientID},
@@ -330,14 +311,15 @@ func startOAuthFlow() error {
 		"code_challenge_method": {"S256"},
 	}
 	authURL.RawQuery = params.Encode()
+	return authURL.String(), nil
+}
 
-	// Start the callback server.
-	type result struct {
-		code string
-		err  error
-	}
-	resultCh := make(chan result, 1)
-
+// newCallbackServer builds the OAuth callback HTTP server and starts serving
+// on the given listener in a goroutine. It pushes the authorization code or
+// an error onto the returned channel once the callback fires. The caller is
+// responsible for shutting down the server.
+func newCallbackServer(state string, listener net.Listener) (*http.Server, chan callbackResult) {
+	resultCh := make(chan callbackResult, 1)
 	server := &http.Server{
 		ReadHeaderTimeout: 5 * time.Second,
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -345,85 +327,34 @@ func startOAuthFlow() error {
 				http.NotFound(w, r)
 				return
 			}
-
 			query := r.URL.Query()
 			if errVal := query.Get("error"); errVal != "" {
 				w.WriteHeader(http.StatusBadRequest)
-				_, _ = fmt.Fprintf(w, "OAuth error")
-				resultCh <- result{err: fmt.Errorf("OAuth error: %s", errVal)}
+				_, _ = fmt.Fprint(w, "OAuth error")
+				resultCh <- callbackResult{err: fmt.Errorf("OAuth error: %s", errVal)}
 				return
 			}
-
 			code := query.Get("code")
 			stateVal := query.Get("state")
-
 			if code == "" {
 				w.WriteHeader(http.StatusBadRequest)
 				_, _ = w.Write([]byte("Missing authorization code"))
-				resultCh <- result{err: errors.New("missing authorization code")}
+				resultCh <- callbackResult{err: errors.New("missing authorization code")}
 				return
 			}
-
 			if stateVal != state {
 				w.WriteHeader(http.StatusBadRequest)
 				_, _ = w.Write([]byte("State mismatch"))
-				resultCh <- result{err: errors.New("state mismatch")}
+				resultCh <- callbackResult{err: errors.New("state mismatch")}
 				return
 			}
-
 			w.WriteHeader(http.StatusOK)
 			_, _ = w.Write([]byte("Authorization successful! You can close this tab."))
-			resultCh <- result{code: code}
+			resultCh <- callbackResult{code: code}
 		}),
 	}
-
-	go func() {
-		_ = server.Serve(listener)
-	}()
-
-	defer func() {
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), time.Second)
-		defer cancel()
-		_ = server.Shutdown(shutdownCtx)
-	}()
-
-	// Open the browser.
-	fmt.Printf("Opening browser for authorization...\n")
-	openBrowser(authURL.String())
-	fmt.Printf("Browser not opening? Pay a visit to:\n  %s\n", authURL.String())
-
-	// Wait for the callback.
-	var authCode string
-	select {
-	case res := <-resultCh:
-		if res.err != nil {
-			return res.err
-		}
-		authCode = res.code
-	case <-ctx.Done():
-		return errors.New("authorization timed out")
-	}
-
-	// Exchange the authorization code for tokens.
-	tokResp, err := exchangeCode(ctx, clientID, authCode, redirectURI, codeVerifier)
-	if err != nil {
-		return err
-	}
-
-	// Save the tokens.
-	token := &OAuthToken{
-		ClientID:     clientID,
-		AccessToken:  tokResp.AccessToken,
-		RefreshToken: tokResp.RefreshToken,
-		ExpiresAt:    time.Now().Add(time.Duration(tokResp.ExpiresIn) * time.Second),
-	}
-
-	if err := saveAuth(token); err != nil {
-		return fmt.Errorf("saving auth: %w", err)
-	}
-
-	fmt.Println("Successfully authenticated with Resend!")
-	return nil
+	go func() { _ = server.Serve(listener) }()
+	return server, resultCh
 }
 
 // getValidAccessToken returns a valid access token, refreshing if necessary.

@@ -168,7 +168,7 @@ var rootCmd = &cobra.Command{
 				cmd.SilenceErrors = true
 				return errors.New("missing delivery method")
 			case Unknown:
-				fmt.Fprintf(errWriter, "\n%s%s Unknown delivery method.\n\n", gap, errorHeaderStyle)
+				_, _ = fmt.Fprintf(errWriter, "\n%s%s Unknown delivery method.\n\n", gap, errorHeaderStyle)
 				p("You have set both %s and %s delivery methods: " + inlineCodeStyle.Render(ResendAPIKey) + " and " + inlineCodeStyle.Render("POP_SMPT_*"))
 				p("Set only one of these environment variables.")
 				cmd.SilenceUsage = true
@@ -292,11 +292,11 @@ var AuthCmd = &cobra.Command{
 
 				var httpErr *HTTPError
 				if errors.As(err, &httpErr) {
-					fmt.Fprintf(errWriter, "\n  %s %s\n\n", errorHeaderStyle.String(), httpErr.Status)
-					fmt.Fprintf(errWriter, "%s\n\n", paragraph.Render(httpErr.Body))
+					_, _ = fmt.Fprintf(errWriter, "\n  %s %s\n\n", errorHeaderStyle.String(), httpErr.Status)
+					_, _ = fmt.Fprintf(errWriter, "%s\n\n", paragraph.Render(httpErr.Body))
 				} else {
-					fmt.Fprintf(errWriter, "\n  %s\n\n", errorHeaderStyle.String())
-					fmt.Fprintf(errWriter, "%s\n\n", paragraph.Render(err.Error()))
+					_, _ = fmt.Fprintf(errWriter, "\n  %s\n\n", errorHeaderStyle.String())
+					_, _ = fmt.Fprintf(errWriter, "%s\n\n", paragraph.Render(err.Error()))
 				}
 				return err
 			}

@@ -4,9 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
-	"net/url"
 	"time"
 
 	"charm.land/bubbles/v2/help"
@@ -77,7 +75,7 @@ type authModel struct {
 	authURL       string
 	browserFailed bool
 
-	resultCh chan authCallbackResult
+	resultCh chan callbackResult
 	server   *http.Server
 
 	help   help.Model
@@ -90,12 +88,10 @@ type authModel struct {
 	width    int
 }
 
-// authCallbackResult is pushed onto the result channel by the HTTP callback
-// handler.
-type authCallbackResult struct {
-	code string
-	err  error
-}
+// authCallbackMsg carries the OAuth callback result to the TUI. It aliases
+// the shared callbackResult so the callback handler and the model use the
+// same channel type without conversion.
+type authCallbackMsg = callbackResult
 
 type authReadyMsg struct {
 	clientID     string
@@ -103,13 +99,8 @@ type authReadyMsg struct {
 	oauthState   string
 	redirectURI  string
 	authURL      string
-	resultCh     chan authCallbackResult
+	resultCh     chan callbackResult
 	server       *http.Server
-}
-
-type authCallbackMsg struct {
-	code string
-	err  error
 }
 
 type authTokenMsg struct {
@@ -331,14 +322,10 @@ func setupOAuthCmd() tea.Cmd {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
-		const localhost = "127.0.0.1"
-		lc := net.ListenConfig{}
-		listener, err := lc.Listen(ctx, "tcp", localhost+":0")
+		listener, redirectURI, err := openCallbackListener(ctx)
 		if err != nil {
-			return authErrMsg{err: fmt.Errorf("starting callback server: %w", err)}
+			return authErrMsg{err: err}
 		}
-		port := listener.Addr().(*net.TCPAddr).Port
-		redirectURI := fmt.Sprintf("http://%s:%d%s", localhost, port, oauthRedirectPath)
 
 		codeVerifier, err := generateCodeVerifier()
 		if err != nil {
@@ -350,68 +337,24 @@ func setupOAuthCmd() tea.Cmd {
 			return authErrMsg{err: err}
 		}
 
-		clientID, err := registerClient(ctx, "http://"+localhost+oauthRedirectPath)
+		clientID, err := registerClient(ctx, "http://"+oauthCallbackHost+oauthRedirectPath)
 		if err != nil {
 			return authErrMsg{err: err}
 		}
 
-		authURL, err := url.Parse(resendAPIBase + "/oauth/authorize")
+		authURL, err := buildAuthURL(clientID, redirectURI, state, codeChallenge)
 		if err != nil {
-			return authErrMsg{err: fmt.Errorf("parsing authorization URL: %w", err)}
+			return authErrMsg{err: err}
 		}
-		params := url.Values{
-			oauthParamClientID:      {clientID},
-			"response_type":         {oauthResponseType},
-			oauthParamRedirectURI:   {redirectURI},
-			oauthParamScope:         {oauthScope},
-			"state":                 {state},
-			"code_challenge":        {codeChallenge},
-			"code_challenge_method": {"S256"},
-		}
-		authURL.RawQuery = params.Encode()
 
-		resultCh := make(chan authCallbackResult, 1)
-		server := &http.Server{
-			ReadHeaderTimeout: 5 * time.Second,
-			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.URL.Path != oauthRedirectPath {
-					http.NotFound(w, r)
-					return
-				}
-				query := r.URL.Query()
-				if errVal := query.Get("error"); errVal != "" {
-					w.WriteHeader(http.StatusBadRequest)
-					_, _ = fmt.Fprint(w, "OAuth error")
-					resultCh <- authCallbackResult{err: fmt.Errorf("OAuth error: %s", errVal)}
-					return
-				}
-				code := query.Get("code")
-				stateVal := query.Get("state")
-				if code == "" {
-					w.WriteHeader(http.StatusBadRequest)
-					_, _ = w.Write([]byte("Missing authorization code"))
-					resultCh <- authCallbackResult{err: errors.New("missing authorization code")}
-					return
-				}
-				if stateVal != state {
-					w.WriteHeader(http.StatusBadRequest)
-					_, _ = w.Write([]byte("State mismatch"))
-					resultCh <- authCallbackResult{err: errors.New("state mismatch")}
-					return
-				}
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write([]byte("Authorization successful! You can close this tab."))
-				resultCh <- authCallbackResult{code: code}
-			}),
-		}
-		go func() { _ = server.Serve(listener) }()
+		server, resultCh := newCallbackServer(state, listener)
 
 		return authReadyMsg{
 			clientID:     clientID,
 			codeVerifier: codeVerifier,
 			oauthState:   state,
 			redirectURI:  redirectURI,
-			authURL:      authURL.String(),
+			authURL:      authURL,
 			resultCh:     resultCh,
 			server:       server,
 		}
@@ -420,11 +363,11 @@ func setupOAuthCmd() tea.Cmd {
 
 // waitForCallbackCmd blocks until the OAuth callback fires or the flow times
 // out.
-func waitForCallbackCmd(resultCh chan authCallbackResult) tea.Cmd {
+func waitForCallbackCmd(resultCh chan callbackResult) tea.Cmd {
 	return func() tea.Msg {
 		select {
 		case res := <-resultCh:
-			return authCallbackMsg(res)
+			return res
 		case <-time.After(5 * time.Minute):
 			return authCallbackMsg{err: errors.New("authorization timed out")}
 		}
