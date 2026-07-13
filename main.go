@@ -30,6 +30,10 @@ const envTrue = "true"
 // Resend delivery (as opposed to API key delivery).
 const PopOAuthResend = "POP_OAUTH_RESEND"
 
+// PopPlaintext control whether the message should be sent in plaintext.
+// Boolean, default `false`.
+const PopPlaintext = "POP_PLAINTEXT"
+
 // ResendAPIKey is the environment variable that enables Resend as a delivery
 // method and uses it to send the email.
 const ResendAPIKey = "RESEND_API_KEY" //nolint:gosec
@@ -71,6 +75,7 @@ var (
 	bcc                    []string
 	subject                string
 	body                   string
+	plaintext              bool
 	attachments            []string
 	preview                bool
 	unsafe                 bool
@@ -220,9 +225,9 @@ See "pop skill" for a full skill definition for AI agents.`,
 			var err error
 			switch deliveryMethod {
 			case SMTP:
-				err = sendSMTPEmail(to, cc, bcc, from, subject, body, attachments)
+				err = sendSMTPEmail(to, cc, bcc, from, subject, body, plaintext, attachments)
 			case Resend:
-				err = sendResendEmail(to, cc, bcc, from, subject, body, attachments)
+				err = sendResendEmail(to, cc, bcc, from, subject, body, plaintext, attachments)
 			default:
 				err = fmt.Errorf("unknown delivery method")
 			}
@@ -373,6 +378,8 @@ func init() {
 	rootCmd.Flags().StringSliceVarP(&attachments, "attach", "a", []string{}, "Email's attachments")
 	rootCmd.Flags().StringSliceVarP(&to, "to", "t", []string{}, "Recipients")
 	rootCmd.Flags().StringVarP(&body, "body", "b", "", "Email's contents")
+	envPlaintext := os.Getenv(PopPlaintext) == "true"
+	rootCmd.Flags().BoolVar(&plaintext, "plaintext", envPlaintext, "Whether to send email in plaintext")
 	envFrom := os.Getenv(PopFrom)
 	rootCmd.Flags().StringVarP(&from, "from", "f", envFrom, "Email's sender"+commentStyle.Render("($"+PopFrom+")"))
 	rootCmd.Flags().StringVarP(&subject, "subject", "s", "", "Email's subject")
