@@ -75,6 +75,9 @@ export POP_FROM="pop@charm.land"
 export POP_SIGNATURE="Sent with [Pop](https://github.com/charmbracelet/pop)!"
 ```
 
+Set `POP_PLAINTEXT=true` or pass `--plaintext` to send the body as plain text
+instead of rendering Markdown to HTML.
+
 > **Note**: If you wish to use a resend account without a custom domain, you can
 > use `onboarding@resend.dev` to send emails.
 

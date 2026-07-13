@@ -39,6 +39,7 @@ Encryption options: starttls (default), ssl, none.
 
     POP_FROM          Default sender address
     POP_SIGNATURE     Signature appended to the email body
+    POP_PLAINTEXT     Set to "true" to send plain text instead of rendered HTML
     POP_UNSAFE_HTML   Set to "true" to allow unsafe HTML and extra markdown features
 
 ## Sending Email (Non-Interactive)
@@ -65,6 +66,7 @@ Body via flag:
     -a, --attach       Attach a file (repeatable)
     -x, --signature    Signature appended to body (env POP_SIGNATURE)
     -u, --unsafe       Allow unsafe HTML / extra markdown features (env POP_UNSAFE_HTML)
+        --plaintext    Send plain text instead of rendering Markdown to HTML
         --preview      Open the TUI to review before sending
 
 ### Attachments
