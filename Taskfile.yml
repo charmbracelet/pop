@@ -1,0 +1,53 @@
+version: "3"
+
+tasks:
+  default:
+    desc: Run the project
+    cmds:
+      - go run . {{.CLI_ARGS}}
+
+  build:
+    desc: Build the project
+    cmds:
+      - go build ./...
+
+  lint:
+    desc: Run golangci-lint
+    cmds:
+      - golangci-lint run
+
+  lint:fix:
+    desc: Run golangci-lint with auto-fix
+    cmds:
+      - golangci-lint run --fix
+
+  vet:
+    desc: Run go vet
+    cmds:
+      - go vet ./...
+
+  test:
+    desc: Run tests
+    cmds:
+      - go test ./...
+
+  tidy:
+    desc: Tidy go modules
+    cmds:
+      - go mod tidy
+
+  fmt:
+    desc: Format code
+    cmds:
+      - gofumpt -w .
+      - goimports -w .
+
+  auth:
+    desc: Authenticate with Resend via OAuth
+    cmds:
+      - go run . auth
+
+  auth:nobrowser:
+    desc: Authenticate with Resend via OAuth (simulates browser failure)
+    cmds:
+      - go run . auth --no-browser

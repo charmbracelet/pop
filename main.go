@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -8,8 +9,11 @@ import (
 	"runtime/debug"
 	"strconv"
 	"strings"
+	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
+	"github.com/charmbracelet/colorprofile"
+	"github.com/charmbracelet/x/term"
 	mcobra "github.com/muesli/mango-cobra"
 	"github.com/muesli/roff"
 	"github.com/resendlabs/resend-go"
@@ -19,6 +23,16 @@ import (
 // PopUnsafeHTML is the environment variable that enables unsafe HTML in the
 // email body.
 const PopUnsafeHTML = "POP_UNSAFE_HTML"
+
+const envTrue = "true"
+
+// PopOAuthResend is the environment variable that enables OAuth-based
+// Resend delivery (as opposed to API key delivery).
+const PopOAuthResend = "POP_OAUTH_RESEND"
+
+// PopPlaintext control whether the message should be sent in plaintext.
+// Boolean, default `false`.
+const PopPlaintext = "POP_PLAINTEXT"
 
 // ResendAPIKey is the environment variable that enables Resend as a delivery
 // method and uses it to send the email.
@@ -30,19 +44,24 @@ const PopFrom = "POP_FROM"
 // PopSignature is the environment variable that sets the default signature.
 const PopSignature = "POP_SIGNATURE"
 
-// PopSMTPHost is the host for the SMTP server if the user is using the SMTP delivery method.
+// PopSMTPHost is the host for the SMTP server if the user is using the
+// SMTP delivery method.
 const PopSMTPHost = "POP_SMTP_HOST"
 
-// PopSMTPPort is the port for the SMTP server if the user is using the SMTP delivery method.
+// PopSMTPPort is the port for the SMTP server if the user is using the
+// SMTP delivery method.
 const PopSMTPPort = "POP_SMTP_PORT"
 
-// PopSMTPUsername is the username for the SMTP server if the user is using the SMTP delivery method.
+// PopSMTPUsername is the username for the SMTP server if the user is
+// using the SMTP delivery method.
 const PopSMTPUsername = "POP_SMTP_USERNAME"
 
-// PopSMTPPassword is the password for the SMTP server if the user is using the SMTP delivery method.
+// PopSMTPPassword is the password for the SMTP server if the user is
+// using the SMTP delivery method.
 const PopSMTPPassword = "POP_SMTP_PASSWORD" //nolint:gosec
 
-// PopSMTPEncryption is the encryption type for the SMTP server if the user is using the SMTP delivery method.
+// PopSMTPEncryption is the encryption type for the SMTP server if the
+// user is using the SMTP delivery method.
 const PopSMTPEncryption = "POP_SMTP_ENCRYPTION"
 
 // PopSMTPInsecureSkipVerify is whether or not to skip TLS verification for the
@@ -56,6 +75,7 @@ var (
 	bcc                    []string
 	subject                string
 	body                   string
+	plaintext              bool
 	attachments            []string
 	preview                bool
 	unsafe                 bool
@@ -67,12 +87,25 @@ var (
 	smtpEncryption         string
 	smtpInsecureSkipVerify bool
 	resendAPIKey           string
+	oauthResend            bool
+	oauthNoBrowser         bool
 )
 
 var rootCmd = &cobra.Command{
 	Use:   "pop",
 	Short: "Send emails from your terminal",
-	Long:  `Pop is a tool for sending emails from your terminal.`,
+	Long: `Pop is a tool for sending emails from your terminal.
+
+Run with no arguments to launch the interactive TUI, or send email
+non-interactively on the CLI by providing all required flags:
+
+  pop < message.md \
+      --from me@example.com \
+      --to you@example.com \
+      --subject "Hello, world!" \
+      --attach invoice.pdf
+
+See "pop skill" for a full skill definition for AI agents.`,
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		// SMTP is "enabled" if the user pointed at a server, with or
 		// without credentials. Local/relay setups (universities, internal
@@ -81,32 +114,104 @@ var rootCmd = &cobra.Command{
 
 		var deliveryMethod DeliveryMethod
 		switch {
+		case resendAPIKey != "" && smtpEnabled && oauthResend:
+			deliveryMethod = Unknown
 		case resendAPIKey != "" && smtpEnabled:
 			deliveryMethod = Unknown
+		case resendAPIKey != "" && oauthResend:
+			deliveryMethod = Unknown
+		case smtpEnabled && oauthResend:
+			deliveryMethod = Unknown
 		case resendAPIKey != "":
+			deliveryMethod = Resend
+		case oauthResend:
+			token, err := getValidAccessToken()
+			if err != nil {
+				cmd.SilenceUsage = true
+				cmd.SilenceErrors = true
+				fmt.Println(errorStyle.Render(err.Error()))
+				return err
+			}
+			if token == "" {
+				fmt.Printf("\n  %s No OAuth token found. Run %s to authenticate.\n\n", errorHeaderStyle.String(), inlineCodeStyle.Render("pop auth"))
+				cmd.SilenceUsage = true
+				cmd.SilenceErrors = true
+				return errors.New("no OAuth token found")
+			}
+			resendAPIKey = token
 			deliveryMethod = Resend
 		case smtpEnabled:
 			deliveryMethod = SMTP
 			if from == "" && smtpUsername != "" {
 				from = smtpUsername
 			}
+		default:
+			// No delivery method was explicitly configured. If we have a
+			// valid OAuth token from a previous `pop auth`, use it instead
+			// of showing setup instructions.
+			token, err := getValidAccessToken()
+			if err != nil {
+				cmd.SilenceUsage = true
+				cmd.SilenceErrors = true
+				fmt.Println(errorStyle.Render(err.Error()))
+				return err
+			}
+			if token != "" {
+				resendAPIKey = token
+				deliveryMethod = Resend
+			}
 		}
 
-		switch deliveryMethod {
-		case None:
-			fmt.Printf("\n  %s %s %s\n\n", errorHeaderStyle.String(), inlineCodeStyle.Render(ResendAPIKey), "environment variable is required.")
-			fmt.Printf("  %s %s\n\n", commentStyle.Render("You can grab one at"), linkStyle.Render("https://resend.com/api-keys"))
-			cmd.SilenceUsage = true
-			cmd.SilenceErrors = true
-			return errors.New("missing required environment variable")
-		case Unknown:
-			fmt.Printf("\n  %s Unknown delivery method.\n", errorHeaderStyle.String())
-			fmt.Printf("\n  You have set both %s and %s delivery methods.", inlineCodeStyle.Render(ResendAPIKey), inlineCodeStyle.Render("POP_SMPT_*"))
-			fmt.Printf("\n  Set only one of these environment variables.\n\n")
-			cmd.SilenceUsage = true
-			cmd.SilenceErrors = true
-			return errors.New("unknown delivery method")
-		case Resend, SMTP:
+		// We'll use this to print to stderr and downsample colors on the way,
+		// if needed.
+		errWriter := colorprofile.NewWriter(os.Stderr, os.Environ())
+
+		{
+			const gap = "  "
+
+			// Set output paragraph width based on the terminal size, if we can.
+			paragraph := paragraphStyle
+			if width, _, err := term.GetSize(os.Stderr.Fd()); err == nil {
+				paragraph = paragraph.Width(width - paragraph.GetHorizontalFrameSize())
+			}
+
+			p := func(s string) {
+				_, _ = fmt.Fprintf(errWriter, "%s\n\n", paragraph.Render(s))
+			}
+
+			bullet := func(name, note string) {
+				var s strings.Builder
+				fmt.Fprintf(&s, "%s• %s", gap, inlineCodeStyle.Render(name))
+				if note != "" {
+					fmt.Fprintf(&s, " %s", note)
+				}
+				_, _ = fmt.Fprintln(errWriter, s.String())
+			}
+
+			switch deliveryMethod {
+			case None:
+				_, _ = fmt.Fprintf(errWriter, "\n%s%s Hello!\n\n", gap, noticeHeaderStyle.SetString("Charm Pop"))
+				p("Pop’s a simple tool for sending email in your termnial. To get going you’ll need to either configure either SMTP or Resend.")
+				p("To use Resend, authenticate with " + inlineCodeStyle.Render("pop auth") + ".")
+				p("To use SMTP, set the following in your environment:")
+				bullet("POP_SMTP_HOST", "")
+				bullet("POP_SMTP_PORT", "(defaults to 587)")
+				bullet("POP_SMTP_HOST", "")
+				bullet("POP_SMTP_ENCRYPTION", "(starttls, ssl, or none)")
+				bullet("POP_SMTP_INSECURE_SKIP_VERIFY", "(starttls, ssl, or none)")
+				_, _ = fmt.Fprintln(errWriter)
+				cmd.SilenceUsage = true
+				cmd.SilenceErrors = true
+				return errors.New("missing delivery method")
+			case Unknown:
+				_, _ = fmt.Fprintf(errWriter, "\n%s%s Unknown delivery method.\n\n", gap, errorHeaderStyle)
+				p("You have set both %s and %s delivery methods: " + inlineCodeStyle.Render(ResendAPIKey) + " and " + inlineCodeStyle.Render("POP_SMPT_*"))
+				p("Set only one of these environment variables.")
+				cmd.SilenceUsage = true
+				cmd.SilenceErrors = true
+				return errors.New("unknown delivery method")
+			case Resend, SMTP:
+			}
 		}
 
 		if body == "" && hasStdin() {
@@ -125,20 +230,24 @@ var rootCmd = &cobra.Command{
 			var err error
 			switch deliveryMethod {
 			case SMTP:
-				err = sendSMTPEmail(to, cc, bcc, from, subject, body, attachments)
+				err = sendSMTPEmail(to, cc, bcc, from, subject, body, plaintext, attachments)
 			case Resend:
-				err = sendResendEmail(to, cc, bcc, from, subject, body, attachments)
+				err = sendResendEmail(to, cc, bcc, from, subject, body, plaintext, attachments)
 			default:
 				err = fmt.Errorf("unknown delivery method")
 			}
 			if err != nil {
 				cmd.SilenceUsage = true
 				cmd.SilenceErrors = true
-				fmt.Println(errorStyle.Render(err.Error()))
+				_, _ = fmt.Fprintln(errWriter, errorStyle.Render(err.Error()))
 				return err
 			}
-			fmt.Print(emailSummary(to, subject))
+			_, _ = fmt.Print(emailSummary(to, subject))
 			return nil
+		}
+
+		if !term.IsTerminal(os.Stdin.Fd()) {
+			return cmd.Usage()
 		}
 
 		p := tea.NewProgram(NewModel(resend.SendEmailRequest{
@@ -199,19 +308,88 @@ var ManCmd = &cobra.Command{
 	},
 }
 
+// AuthCmd is the cobra command for OAuth authentication with Resend.
+var AuthCmd = &cobra.Command{
+	Use:   "auth",
+	Short: "Authenticate with Resend via OAuth",
+	Long:  `Authenticate with Resend using OAuth 2.0 with PKCE. This opens a browser for authorization and stores tokens locally.`,
+	Args:  cobra.NoArgs,
+	RunE: func(cmd *cobra.Command, _ []string) error {
+		if term.IsTerminal(os.Stdin.Fd()) {
+			if err := startOAuthFlowTUI(oauthNoBrowser); err != nil {
+				cmd.SilenceUsage = true
+				cmd.SilenceErrors = true
+
+				errWriter := colorprofile.NewWriter(os.Stderr, os.Environ())
+				paragraph := paragraphStyle
+				if width, _, szErr := term.GetSize(os.Stderr.Fd()); szErr == nil {
+					paragraph = paragraph.Width(width - paragraph.GetHorizontalFrameSize())
+				}
+
+				var httpErr *HTTPError
+				if errors.As(err, &httpErr) {
+					_, _ = fmt.Fprintf(errWriter, "\n  %s %s\n\n", errorHeaderStyle.String(), httpErr.Status)
+					_, _ = fmt.Fprintf(errWriter, "%s\n\n", paragraph.Render(httpErr.Body))
+				} else {
+					_, _ = fmt.Fprintf(errWriter, "\n  %s\n\n", errorHeaderStyle.String())
+					_, _ = fmt.Fprintf(errWriter, "%s\n\n", paragraph.Render(err.Error()))
+				}
+				return err
+			}
+			return nil
+		}
+		return startOAuthFlow()
+	},
+}
+
+// RevokeCmd is the cobra command for revoking OAuth tokens.
+var RevokeCmd = &cobra.Command{
+	Use:   "revoke",
+	Short: "Revoke OAuth authentication with Resend",
+	Long:  `Revokes and removes stored OAuth tokens for Resend.`,
+	Args:  cobra.NoArgs,
+	RunE: func(_ *cobra.Command, _ []string) error {
+		token, err := loadAuth()
+		if err != nil {
+			if os.IsNotExist(err) {
+				fmt.Println("No OAuth token found.")
+				return nil
+			}
+			return fmt.Errorf("loading auth: %w", err)
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		if err := revokeToken(ctx, token.ClientID, token.RefreshToken); err != nil {
+			fmt.Println(errorStyle.Render("Failed to revoke token: " + err.Error()))
+		}
+		if err := deleteAuth(); err != nil {
+			return fmt.Errorf("deleting auth: %w", err)
+		}
+		fmt.Println("Successfully revoked OAuth authentication.")
+		return nil
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(ManCmd)
+	rootCmd.AddCommand(AuthCmd)
+	rootCmd.AddCommand(SkillCmd)
+	rootCmd.AddCommand(InstallSkillCmd)
+	AuthCmd.AddCommand(RevokeCmd)
+	AuthCmd.Flags().BoolVar(&oauthNoBrowser, "no-browser", false, "Simulate browser open failure (for testing)")
 
 	rootCmd.Flags().StringSliceVar(&bcc, "bcc", []string{}, "BCC recipients")
 	rootCmd.Flags().StringSliceVar(&cc, "cc", []string{}, "CC recipients")
 	rootCmd.Flags().StringSliceVarP(&attachments, "attach", "a", []string{}, "Email's attachments")
 	rootCmd.Flags().StringSliceVarP(&to, "to", "t", []string{}, "Recipients")
 	rootCmd.Flags().StringVarP(&body, "body", "b", "", "Email's contents")
+	envPlaintext := os.Getenv(PopPlaintext) == "true"
+	rootCmd.Flags().BoolVar(&plaintext, "plaintext", envPlaintext, "Whether to send email in plaintext")
 	envFrom := os.Getenv(PopFrom)
 	rootCmd.Flags().StringVarP(&from, "from", "f", envFrom, "Email's sender"+commentStyle.Render("($"+PopFrom+")"))
 	rootCmd.Flags().StringVarP(&subject, "subject", "s", "", "Email's subject")
 	rootCmd.Flags().BoolVar(&preview, "preview", false, "Whether to preview the email before sending")
-	envUnsafe := os.Getenv(PopUnsafeHTML) == "true"
+	envUnsafe := os.Getenv(PopUnsafeHTML) == envTrue
 	rootCmd.Flags().BoolVarP(&unsafe, "unsafe", "u", envUnsafe, "Whether to allow unsafe HTML in the email body, also enable some extra markdown features (Experimental)")
 	envSignature := os.Getenv(PopSignature)
 	rootCmd.Flags().StringVarP(&signature, "signature", "x", envSignature, "Signature to display at the end of the email."+commentStyle.Render("($"+PopSignature+")"))
@@ -228,10 +406,12 @@ func init() {
 	rootCmd.Flags().StringVarP(&smtpPassword, "smtp.password", "p", envSMTPPassword, "Password of the SMTP server"+commentStyle.Render("($"+PopSMTPPassword+")"))
 	envSMTPEncryption := os.Getenv(PopSMTPEncryption)
 	rootCmd.Flags().StringVarP(&smtpEncryption, "smtp.encryption", "e", envSMTPEncryption, "Encryption type of the SMTP server (starttls, ssl, or none)"+commentStyle.Render("($"+PopSMTPEncryption+")"))
-	envInsecureSkipVerify := os.Getenv(PopSMTPInsecureSkipVerify) == "true"
+	envInsecureSkipVerify := os.Getenv(PopSMTPInsecureSkipVerify) == envTrue
 	rootCmd.Flags().BoolVarP(&smtpInsecureSkipVerify, "smtp.insecure", "i", envInsecureSkipVerify, "Skip TLS verification with SMTP server"+commentStyle.Render("($"+PopSMTPInsecureSkipVerify+")"))
 	envResendAPIKey := os.Getenv(ResendAPIKey)
 	rootCmd.Flags().StringVarP(&resendAPIKey, "resend.key", "r", envResendAPIKey, "API key for the Resend.com"+commentStyle.Render("($"+ResendAPIKey+")"))
+	envOAuthResend := os.Getenv(PopOAuthResend) == envTrue
+	rootCmd.Flags().BoolVar(&oauthResend, "oauth", envOAuthResend, "Use OAuth for Resend authentication"+commentStyle.Render("($"+PopOAuthResend+")"))
 
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 

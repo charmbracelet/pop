@@ -1,6 +1,6 @@
 package main
 
-import "github.com/charmbracelet/bubbles/key"
+import "charm.land/bubbles/v2/key"
 
 // KeyMap represents the key bindings for the application.
 type KeyMap struct {

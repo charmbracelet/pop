@@ -1,0 +1,184 @@
+package main
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/charmbracelet/colorprofile"
+	"github.com/spf13/cobra"
+)
+
+// Skill install targets.
+const (
+	targetCrush  = "crush"
+	targetClaude = "claude"
+	targetCodex  = "codex"
+	targetCursor = "cursor"
+	targetPi     = "pi"
+)
+
+// skillInstaller resolves the destination path and formats content for a given agent.
+type skillInstaller struct {
+	path    func() (string, error)
+	content func() string
+}
+
+// tildePath replaces the home directory prefix with ~/ for display.
+func tildePath(path string) string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return path
+	}
+	if path == home {
+		return "~"
+	}
+	if !strings.HasPrefix(path, home) {
+		return path
+	}
+	return "~" + strings.TrimPrefix(path, home)
+}
+
+// crushSkillContent returns the standard Crush/Claude skill format.
+func crushSkillContent() string {
+	return popSkill
+}
+
+// cursorSkillContent returns the Cursor .mdc format with cursor-compatible frontmatter.
+func cursorSkillContent() string {
+	return "---\n" +
+		"description: '" + popSkillDescription + "'\n" +
+		"globs:\n" +
+		"alwaysApply: false\n" +
+		"---\n\n" +
+		popSkillBody
+}
+
+var skillInstallers = map[string]skillInstaller{
+	targetCrush: {
+		path: func() (string, error) {
+			home, err := os.UserHomeDir()
+			if err != nil {
+				return "", fmt.Errorf("resolving home directory: %w", err)
+			}
+			return filepath.Join(home, ".config", "crush", "skills", "pop", "SKILL.md"), nil
+		},
+		content: crushSkillContent,
+	},
+	targetClaude: {
+		path: func() (string, error) {
+			home, err := os.UserHomeDir()
+			if err != nil {
+				return "", fmt.Errorf("resolving home directory: %w", err)
+			}
+			return filepath.Join(home, ".claude", "skills", "pop", "SKILL.md"), nil
+		},
+		content: crushSkillContent,
+	},
+	targetCursor: {
+		path: func() (string, error) {
+			return filepath.Join(".cursor", "rules", "pop.mdc"), nil
+		},
+		content: cursorSkillContent,
+	},
+	targetCodex: {
+		path: func() (string, error) {
+			home, err := os.UserHomeDir()
+			if err != nil {
+				return "", fmt.Errorf("resolving home directory: %w", err)
+			}
+			return filepath.Join(home, ".codex", "AGENTS.md"), nil
+		},
+		content: func() string { return popSkillBody },
+	},
+	targetPi: {
+		path: func() (string, error) {
+			return filepath.Join(".pi", "skills", "pop.md"), nil
+		},
+		content: crushSkillContent,
+	},
+}
+
+// skillDisplayNames maps internal target names to their product display names.
+var skillDisplayNames = map[string]string{
+	targetCrush:  "Charm Crush",
+	targetClaude: "Claude Code",
+	targetCodex:  "OpenAI Codex",
+	targetCursor: "Cursor",
+	targetPi:     "Pi",
+}
+
+// skillTargetOrder is the order targets appear in help output.
+var skillTargetOrder = []string{targetCrush, targetClaude, targetCodex, targetCursor, targetPi}
+
+var installSkillForce bool
+
+// InstallSkillCmd is the parent command for installing the pop skill to AI agents.
+var InstallSkillCmd = &cobra.Command{
+	Use:   "install-skill",
+	Short: "Install the Pop skill for AI agents",
+	Long:  `Install the Pop skill definition for an AI agent.`,
+	Args:  cobra.NoArgs,
+}
+
+// newInstallSkillTargetCmd creates a subcommand for installing to a specific agent.
+func newInstallSkillTargetCmd(target string) *cobra.Command {
+	name := skillDisplayNames[target]
+	short := fmt.Sprintf("Install the Pop skill for %s", name)
+	if target == targetCursor || target == targetPi {
+		short = fmt.Sprintf("Install the Pop skill for %s (in the current directory)", name)
+	}
+	return &cobra.Command{
+		Use:   target,
+		Short: short,
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			cmd.SilenceUsage = true
+			cmd.SilenceErrors = true
+			return installSkill(target)
+		},
+	}
+}
+
+func installSkill(target string) error {
+	const gap = "  "
+	w := colorprofile.NewWriter(os.Stderr, os.Environ())
+	inst := skillInstallers[target]
+	path, err := inst.path()
+	if err != nil {
+		_, _ = fmt.Fprintf(w, "\n%s%s %s\n\n", gap, errorHeaderStyle.String(), err)
+		return fmt.Errorf("resolving path: %w", err)
+	}
+
+	if _, err := os.Stat(path); err == nil && !installSkillForce {
+		_, _ = fmt.Fprintf(w, "\n%s%s Skill already installed at %s\n\n",
+			gap, errorHeaderStyle.String(),
+			inlineCodeStyle.Render(tildePath(path)))
+		_, _ = fmt.Fprintf(w, "%sTo overwrite, use %s.\n\n", gap, inlineCodeStyle.Render("--force"))
+		return fmt.Errorf("skill already installed")
+	}
+
+	if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
+		_, _ = fmt.Fprintf(w, "\n%s%s %s\n\n", gap, errorHeaderStyle.String(), err)
+		return fmt.Errorf("creating directory: %w", err)
+	}
+
+	if err := os.WriteFile(path, []byte(inst.content()), 0o600); err != nil {
+		_, _ = fmt.Fprintf(w, "\n%s%s %s\n\n", gap, errorHeaderStyle.String(), err)
+		return fmt.Errorf("writing skill: %w", err)
+	}
+
+	_, _ = fmt.Fprintf(w, "  %s Installed skill to %s\n",
+		activeLabelStyle.Render("OK"),
+		tildePath(path))
+	return nil
+}
+
+func init() {
+	InstallSkillCmd.PersistentFlags().BoolVarP(&installSkillForce, "force", "f", false, "Overwrite existing skill files")
+	cobra.EnableCommandSorting = false
+	for _, target := range skillTargetOrder {
+		InstallSkillCmd.AddCommand(newInstallSkillTargetCmd(target))
+	}
+}

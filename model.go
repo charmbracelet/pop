@@ -5,14 +5,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/bubbles/filepicker"
-	"github.com/charmbracelet/bubbles/help"
-	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/list"
-	"github.com/charmbracelet/bubbles/spinner"
-	"github.com/charmbracelet/bubbles/textarea"
-	"github.com/charmbracelet/bubbles/textinput"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/filepicker"
+	"charm.land/bubbles/v2/help"
+	"charm.land/bubbles/v2/key"
+	"charm.land/bubbles/v2/list"
+	"charm.land/bubbles/v2/spinner"
+	"charm.land/bubbles/v2/textarea"
+	"charm.land/bubbles/v2/textinput"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/exp/ordered"
 	"github.com/resendlabs/resend-go"
 )
@@ -89,60 +90,93 @@ func NewModel(defaults resend.SendEmailRequest, deliveryMethod DeliveryMethod) M
 	from := textinput.New()
 	from.Prompt = "From "
 	from.Placeholder = "me@example.com"
-	from.PromptStyle = labelStyle
-	from.TextStyle = textStyle
-	from.Cursor.Style = cursorStyle
-	from.PlaceholderStyle = placeholderStyle
+	fromStyles := textinput.DefaultDarkStyles()
+	fromStyles.Focused.Prompt = activeLabelStyle
+	fromStyles.Focused.Text = activeTextStyle
+	fromStyles.Focused.Placeholder = placeholderStyle
+	fromStyles.Blurred.Prompt = labelStyle
+	fromStyles.Blurred.Text = textStyle
+	fromStyles.Blurred.Placeholder = placeholderStyle
+	fromStyles.Cursor.Color = whiteColor
+	from.SetStyles(fromStyles)
+	from.SetVirtualCursor(false)
 	from.SetValue(defaults.From)
 
 	to := textinput.New()
 	to.Prompt = "To "
-	to.PromptStyle = labelStyle
-	to.Cursor.Style = cursorStyle
-	to.PlaceholderStyle = placeholderStyle
-	to.TextStyle = textStyle
+	toStyles := textinput.DefaultDarkStyles()
+	toStyles.Focused.Prompt = activeLabelStyle
+	toStyles.Focused.Text = activeTextStyle
+	toStyles.Focused.Placeholder = placeholderStyle
+	toStyles.Blurred.Prompt = labelStyle
+	toStyles.Blurred.Text = textStyle
+	toStyles.Blurred.Placeholder = placeholderStyle
+	toStyles.Cursor.Color = whiteColor
+	to.SetStyles(toStyles)
+	to.SetVirtualCursor(false)
 	to.Placeholder = "you@example.com"
 	to.SetValue(strings.Join(defaults.To, ToSeparator))
 
 	cc := textinput.New()
 	cc.Prompt = "Cc "
-	cc.PromptStyle = labelStyle
-	cc.Cursor.Style = cursorStyle
-	cc.PlaceholderStyle = placeholderStyle
-	cc.TextStyle = textStyle
+	ccStyles := textinput.DefaultDarkStyles()
+	ccStyles.Focused.Prompt = activeLabelStyle
+	ccStyles.Focused.Text = activeTextStyle
+	ccStyles.Focused.Placeholder = placeholderStyle
+	ccStyles.Blurred.Prompt = labelStyle
+	ccStyles.Blurred.Text = textStyle
+	ccStyles.Blurred.Placeholder = placeholderStyle
+	ccStyles.Cursor.Color = whiteColor
+	cc.SetStyles(ccStyles)
+	cc.SetVirtualCursor(false)
 	cc.Placeholder = "cc@example.com"
 	cc.SetValue(strings.Join(defaults.Cc, ToSeparator))
 
 	bcc := textinput.New()
 	bcc.Prompt = "Bcc "
-	bcc.PromptStyle = labelStyle
-	bcc.Cursor.Style = cursorStyle
-	bcc.PlaceholderStyle = placeholderStyle
-	bcc.TextStyle = textStyle
+	bccStyles := textinput.DefaultDarkStyles()
+	bccStyles.Focused.Prompt = activeLabelStyle
+	bccStyles.Focused.Text = activeTextStyle
+	bccStyles.Focused.Placeholder = placeholderStyle
+	bccStyles.Blurred.Prompt = labelStyle
+	bccStyles.Blurred.Text = textStyle
+	bccStyles.Blurred.Placeholder = placeholderStyle
+	bccStyles.Cursor.Color = whiteColor
+	bcc.SetStyles(bccStyles)
+	bcc.SetVirtualCursor(false)
 	bcc.Placeholder = "bcc@example.com"
 	bcc.SetValue(strings.Join(defaults.Bcc, ToSeparator))
 
 	subject := textinput.New()
 	subject.Prompt = "Subject "
-	subject.PromptStyle = labelStyle
-	subject.Cursor.Style = cursorStyle
-	subject.PlaceholderStyle = placeholderStyle
-	subject.TextStyle = textStyle
+	subjectStyles := textinput.DefaultDarkStyles()
+	subjectStyles.Focused.Prompt = activeLabelStyle
+	subjectStyles.Focused.Text = activeTextStyle
+	subjectStyles.Focused.Placeholder = placeholderStyle
+	subjectStyles.Blurred.Prompt = labelStyle
+	subjectStyles.Blurred.Text = textStyle
+	subjectStyles.Blurred.Placeholder = placeholderStyle
+	subjectStyles.Cursor.Color = whiteColor
+	subject.SetStyles(subjectStyles)
+	subject.SetVirtualCursor(false)
 	subject.Placeholder = "Hello!"
 	subject.SetValue(defaults.Subject)
 
 	body := textarea.New()
 	body.Placeholder = "# Email"
 	body.ShowLineNumbers = false
-	body.FocusedStyle.CursorLine = activeTextStyle
-	body.FocusedStyle.Prompt = activeLabelStyle
-	body.FocusedStyle.Text = activeTextStyle
-	body.FocusedStyle.Placeholder = placeholderStyle
-	body.BlurredStyle.CursorLine = textStyle
-	body.BlurredStyle.Prompt = labelStyle
-	body.BlurredStyle.Text = textStyle
-	body.BlurredStyle.Placeholder = placeholderStyle
-	body.Cursor.Style = cursorStyle
+	bodyStyles := textarea.DefaultDarkStyles()
+	bodyStyles.Focused.CursorLine = activeTextStyle
+	bodyStyles.Focused.Prompt = activeLabelStyle
+	bodyStyles.Focused.Text = activeTextStyle
+	bodyStyles.Focused.Placeholder = placeholderStyle
+	bodyStyles.Blurred.CursorLine = textStyle
+	bodyStyles.Blurred.Prompt = labelStyle
+	bodyStyles.Blurred.Text = textStyle
+	bodyStyles.Blurred.Placeholder = placeholderStyle
+	bodyStyles.Cursor.Color = whiteColor
+	body.SetStyles(bodyStyles)
+	body.SetVirtualCursor(false)
 	body.CharLimit = 4000
 	body.SetValue(defaults.Text)
 
@@ -212,9 +246,7 @@ func NewModel(defaults resend.SendEmailRequest, deliveryMethod DeliveryMethod) M
 
 // Init initializes the model.
 func (m Model) Init() tea.Cmd {
-	return tea.Batch(
-		m.From.Cursor.BlinkCmd(),
-	)
+	return nil
 }
 
 type clearErrMsg struct{}
@@ -239,7 +271,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, clearErrAfter(10 * time.Second)
 	case clearErrMsg:
 		m.err = nil
-	case tea.KeyMsg:
+	case tea.WindowSizeMsg:
+		m.setCommonWidths(msg.Width)
+	case tea.KeyPressMsg:
 		switch {
 		case key.Matches(msg, m.keymap.NextInput):
 			m.blurInputs()
@@ -319,8 +353,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	m.updateKeymap()
-
 	var cmds []tea.Cmd
 	var cmd tea.Cmd
 	m.From, cmd = m.From.Update(msg)
@@ -357,10 +389,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case editingFrom, editingTo, editingCc, editingBcc, editingSubject, editingBody, hoveringSendButton:
 	}
 
+	m.updateKeymap()
+
 	m.help, cmd = m.help.Update(msg)
 	cmds = append(cmds, cmd)
 
 	return m, tea.Batch(cmds...)
+}
+
+func (m *Model) setCommonWidths(width int) {
+	inputWidth := width - paddedStyle.GetHorizontalFrameSize() - lipgloss.Width("Subject ")
+	m.From.SetWidth(inputWidth)
+	m.To.SetWidth(inputWidth)
+	m.Cc.SetWidth(inputWidth)
+	m.Bcc.SetWidth(inputWidth)
+	m.Subject.SetWidth(inputWidth)
+	m.Body.SetWidth(width - paddedStyle.GetHorizontalFrameSize())
+	m.Attachments.SetWidth(width - paddedStyle.GetHorizontalFrameSize())
+	m.help.SetWidth(width - paddedStyle.GetHorizontalFrameSize())
 }
 
 func (m *Model) blurInputs() {
@@ -372,71 +418,49 @@ func (m *Model) blurInputs() {
 		m.Cc.Blur()
 		m.Bcc.Blur()
 	}
-	m.From.PromptStyle = labelStyle
-	m.To.PromptStyle = labelStyle
-	if m.showCc {
-		m.Cc.PromptStyle = labelStyle
-		m.Cc.TextStyle = textStyle
-		m.Bcc.PromptStyle = labelStyle
-		m.Bcc.TextStyle = textStyle
-	}
-	m.Subject.PromptStyle = labelStyle
-	m.From.TextStyle = textStyle
-	m.To.TextStyle = textStyle
-	m.Subject.TextStyle = textStyle
-	m.Attachments.Styles.Title = labelStyle
+	m.Attachments.Styles.Title = attachmentsTitleInactiveStyle
 	m.Attachments.SetDelegate(attachmentDelegate{false})
 }
 
 func (m *Model) focusActiveInput() {
 	switch m.state {
 	case editingFrom:
-		m.From.PromptStyle = activeLabelStyle
-		m.From.TextStyle = activeTextStyle
 		m.From.Focus()
 		m.From.CursorEnd()
 	case editingTo:
-		m.To.PromptStyle = activeLabelStyle
-		m.To.TextStyle = activeTextStyle
 		m.To.Focus()
 		m.To.CursorEnd()
 	case editingCc:
-		m.Cc.PromptStyle = activeLabelStyle
-		m.Cc.TextStyle = activeTextStyle
 		m.Cc.Focus()
 		m.Cc.CursorEnd()
 	case editingBcc:
-		m.Bcc.PromptStyle = activeLabelStyle
-		m.Bcc.TextStyle = activeTextStyle
 		m.Bcc.Focus()
 		m.Bcc.CursorEnd()
 	case editingSubject:
-		m.Subject.PromptStyle = activeLabelStyle
-		m.Subject.TextStyle = activeTextStyle
 		m.Subject.Focus()
 		m.Subject.CursorEnd()
 	case editingBody:
 		m.Body.Focus()
 		m.Body.CursorEnd()
 	case editingAttachments:
-		m.Attachments.Styles.Title = activeLabelStyle
+		m.Attachments.Styles.Title = attachmentsTitleActiveStyle
 		m.Attachments.SetDelegate(attachmentDelegate{true})
 	case hoveringSendButton, pickingFile, sendingEmail:
 	}
 }
 
 // View displays the application.
-func (m Model) View() string {
+func (m Model) View() tea.View {
 	if m.quitting {
-		return ""
+		return tea.NewView("")
 	}
 
 	switch m.state {
 	case pickingFile:
-		return "\n" + activeLabelStyle.Render("Attachments") + " " + commentStyle.Render(m.filepicker.CurrentDirectory) +
-			"\n\n" + m.filepicker.View()
+		return tea.NewView("\n" + activeLabelStyle.Render("Attachments") + " " + commentStyle.Render(m.filepicker.CurrentDirectory) +
+			"\n\n" + m.filepicker.View())
 	case sendingEmail:
-		return "\n " + m.loadingSpinner.View() + "Sending email"
+		return tea.NewView("\n " + m.loadingSpinner.View() + "Sending email")
 	case editingFrom, editingTo, editingCc, editingBcc, editingSubject, editingBody, editingAttachments, hoveringSendButton:
 	}
 
@@ -446,11 +470,13 @@ func (m Model) View() string {
 	s.WriteString("\n")
 	s.WriteString(m.To.View())
 	s.WriteString("\n")
+	ccLines := 0
 	if m.showCc {
 		s.WriteString(m.Cc.View())
 		s.WriteString("\n")
 		s.WriteString(m.Bcc.View())
 		s.WriteString("\n")
+		ccLines = 2
 	}
 	s.WriteString(m.Subject.View())
 	s.WriteString("\n\n")
@@ -473,5 +499,51 @@ func (m Model) View() string {
 		s.WriteString(errorStyle.Render(m.err.Error()))
 	}
 
-	return paddedStyle.Render(s.String())
+	v := tea.NewView(paddedStyle.Render(s.String()))
+
+	// Position the real cursor based on which field is focused.
+	padY := paddedStyle.GetPaddingTop()
+	padX := paddedStyle.GetPaddingLeft()
+	switch m.state {
+	case editingFrom:
+		if c := m.From.Cursor(); c != nil {
+			c.Y += padY
+			c.X += padX
+			v.Cursor = c
+		}
+	case editingTo:
+		if c := m.To.Cursor(); c != nil {
+			c.Y += padY + 1
+			c.X += padX
+			v.Cursor = c
+		}
+	case editingCc:
+		if c := m.Cc.Cursor(); c != nil {
+			c.Y += padY + 2
+			c.X += padX
+			v.Cursor = c
+		}
+	case editingBcc:
+		if c := m.Bcc.Cursor(); c != nil {
+			c.Y += padY + 3
+			c.X += padX
+			v.Cursor = c
+		}
+	case editingSubject:
+		if c := m.Subject.Cursor(); c != nil {
+			c.Y += padY + ccLines + 2
+			c.X += padX
+			v.Cursor = c
+		}
+	case editingBody:
+		if c := m.Body.Cursor(); c != nil {
+			c.Y += padY + ccLines + 4
+			c.X += padX
+			v.Cursor = c
+		}
+	case editingAttachments, hoveringSendButton, pickingFile, sendingEmail:
+		// No cursor positioning needed for these states.
+	}
+
+	return v
 }
