@@ -107,15 +107,28 @@ non-interactively on the CLI by providing all required flags:
 
 See "pop skill" for a full skill definition for AI agents.`,
 	RunE: func(cmd *cobra.Command, _ []string) error {
+		// We'll use this to print to stderr and downsample colors on the way,
+		// if needed.
+		errWriter := colorprofile.NewWriter(os.Stderr, os.Environ())
+
+		if smtpPassword != "" && smtpUsername == "" {
+			err := errors.New("SMTP password provided without an SMTP username")
+			cmd.SilenceUsage = true
+			cmd.SilenceErrors = true
+			_, _ = fmt.Fprintf(errWriter, "\n  %s %s\n\n", errorHeaderStyle.String(), err)
+			return err
+		}
+		smtpEnabled := smtpHost != "" || smtpUsername != ""
+
 		var deliveryMethod DeliveryMethod
 		switch {
-		case resendAPIKey != "" && smtpUsername != "" && smtpPassword != "" && oauthResend:
+		case resendAPIKey != "" && smtpEnabled && oauthResend:
 			deliveryMethod = Unknown
-		case resendAPIKey != "" && smtpUsername != "" && smtpPassword != "":
+		case resendAPIKey != "" && smtpEnabled:
 			deliveryMethod = Unknown
 		case resendAPIKey != "" && oauthResend:
 			deliveryMethod = Unknown
-		case smtpUsername != "" && smtpPassword != "" && oauthResend:
+		case smtpEnabled && oauthResend:
 			deliveryMethod = Unknown
 		case resendAPIKey != "":
 			deliveryMethod = Resend
@@ -135,9 +148,9 @@ See "pop skill" for a full skill definition for AI agents.`,
 			}
 			resendAPIKey = token
 			deliveryMethod = Resend
-		case smtpUsername != "" && smtpPassword != "":
+		case smtpEnabled:
 			deliveryMethod = SMTP
-			if from == "" {
+			if from == "" && smtpUsername != "" {
 				from = smtpUsername
 			}
 		default:
@@ -156,10 +169,6 @@ See "pop skill" for a full skill definition for AI agents.`,
 				deliveryMethod = Resend
 			}
 		}
-
-		// We'll use this to print to stderr and downsample colors on the way,
-		// if needed.
-		errWriter := colorprofile.NewWriter(os.Stderr, os.Environ())
 
 		{
 			const gap = "  "
