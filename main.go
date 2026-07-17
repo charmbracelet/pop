@@ -107,10 +107,18 @@ non-interactively on the CLI by providing all required flags:
 
 See "pop skill" for a full skill definition for AI agents.`,
 	RunE: func(cmd *cobra.Command, _ []string) error {
-		// SMTP is "enabled" if the user pointed at a server, with or
-		// without credentials. Local/relay setups (universities, internal
-		// mailrelays) often run without auth, see #136.
-		smtpEnabled := smtpHost != "" || smtpUsername != "" || smtpPassword != ""
+		// We'll use this to print to stderr and downsample colors on the way,
+		// if needed.
+		errWriter := colorprofile.NewWriter(os.Stderr, os.Environ())
+
+		if smtpPassword != "" && smtpUsername == "" {
+			err := errors.New("SMTP password provided without an SMTP username")
+			cmd.SilenceUsage = true
+			cmd.SilenceErrors = true
+			_, _ = fmt.Fprintf(errWriter, "\n  %s %s\n\n", errorHeaderStyle.String(), err)
+			return err
+		}
+		smtpEnabled := smtpHost != "" || smtpUsername != ""
 
 		var deliveryMethod DeliveryMethod
 		switch {
@@ -161,10 +169,6 @@ See "pop skill" for a full skill definition for AI agents.`,
 				deliveryMethod = Resend
 			}
 		}
-
-		// We'll use this to print to stderr and downsample colors on the way,
-		// if needed.
-		errWriter := colorprofile.NewWriter(os.Stderr, os.Environ())
 
 		{
 			const gap = "  "
