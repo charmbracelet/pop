@@ -19,11 +19,10 @@ import (
 )
 
 const (
-	resendAPIBase       = "https://api.resend.com"
+	oauthClientID       = "8f0f6188-0458-431c-bb31-7806f22a673b"
 	oauthRedirectPath   = "/oauth/callback"
 	oauthCallbackHost   = "127.0.0.1"
 	oauthScope          = "emails:send"
-	oauthClientName     = "Pop"
 	tokenRefreshRefresh = 5 * time.Minute
 
 	// OAuth string constants (goconst).
@@ -35,9 +34,17 @@ const (
 	oauthParamScope            = "scope"
 )
 
-// OAuthToken stores the persisted OAuth tokens and client registration.
+// resendBaseURL returns the Resend API base URL, allowing override via the
+// RESEND_BASE_URL environment variable (useful for staging/testing).
+func resendBaseURL() string {
+	if base := os.Getenv("RESEND_BASE_URL"); base != "" {
+		return base
+	}
+	return "https://api.resend.com"
+}
+
+// OAuthToken stores the persisted OAuth tokens.
 type OAuthToken struct {
-	ClientID     string    `json:"client_id"`
 	AccessToken  string    `json:"access_token"`
 	RefreshToken string    `json:"refresh_token"`
 	ExpiresAt    time.Time `json:"expires_at"`
@@ -139,47 +146,6 @@ func generateState() (string, error) {
 	return base64.RawURLEncoding.EncodeToString(b), nil
 }
 
-// registerClient performs dynamic client registration with Resend.
-func registerClient(ctx context.Context, redirectURI string) (string, error) {
-	body := map[string]any{
-		"client_name":                oauthClientName,
-		"redirect_uris":              []string{redirectURI},
-		"grant_types":                []string{oauthGrantTypeAuthCode, oauthGrantTypeRefreshToken},
-		"response_types":             []string{oauthResponseType},
-		"token_endpoint_auth_method": "none",
-		oauthParamScope:              oauthScope,
-	}
-	data, err := json.Marshal(body)
-	if err != nil {
-		return "", fmt.Errorf("marshaling registration: %w", err)
-	}
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, resendAPIBase+"/oauth/register", strings.NewReader(string(data)))
-	if err != nil {
-		return "", fmt.Errorf("creating registration request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("registering client: %w", err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	if resp.StatusCode != http.StatusCreated {
-		respBody, _ := io.ReadAll(resp.Body)
-		return "", &HTTPError{Status: resp.Status, Body: string(respBody)}
-	}
-
-	var result struct {
-		ClientID string `json:"client_id"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return "", fmt.Errorf("decoding registration response: %w", err)
-	}
-	return result.ClientID, nil
-}
-
 // HTTPError represents a non-successful HTTP response from the Resend API.
 type HTTPError struct {
 	Status string // e.g. "429 Too Many Requests"
@@ -209,7 +175,7 @@ func exchangeCode(ctx context.Context, clientID, code, redirectURI, codeVerifier
 		"code_verifier":       {codeVerifier},
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, resendAPIBase+"/oauth/token", strings.NewReader(form.Encode()))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, resendBaseURL()+"/oauth/token", strings.NewReader(form.Encode()))
 	if err != nil {
 		return nil, fmt.Errorf("creating token request: %w", err)
 	}
@@ -226,7 +192,7 @@ func refreshToken(ctx context.Context, clientID, refreshTok string) (*tokenRespo
 		"refresh_token":    {refreshTok},
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, resendAPIBase+"/oauth/token", strings.NewReader(form.Encode()))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, resendBaseURL()+"/oauth/token", strings.NewReader(form.Encode()))
 	if err != nil {
 		return nil, fmt.Errorf("creating refresh request: %w", err)
 	}
@@ -243,7 +209,7 @@ func revokeToken(ctx context.Context, clientID, token string) error {
 		"token_type_hint":  {oauthGrantTypeRefreshToken},
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, resendAPIBase+"/oauth/revoke", strings.NewReader(form.Encode()))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, resendBaseURL()+"/oauth/revoke", strings.NewReader(form.Encode()))
 	if err != nil {
 		return fmt.Errorf("creating revoke request: %w", err)
 	}
@@ -300,7 +266,7 @@ func openCallbackListener(ctx context.Context) (net.Listener, string, error) {
 // buildAuthURL constructs the Resend authorization endpoint URL with the
 // PKCE parameters required by the code flow.
 func buildAuthURL(clientID, redirectURI, state, codeChallenge string) (string, error) {
-	authURL, err := url.Parse(resendAPIBase + "/oauth/authorize")
+	authURL, err := url.Parse(resendBaseURL() + "/oauth/authorize")
 	if err != nil {
 		return "", fmt.Errorf("parsing authorization URL: %w", err)
 	}
@@ -379,7 +345,7 @@ func getValidAccessToken() (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	tokResp, err := refreshToken(ctx, token.ClientID, token.RefreshToken)
+	tokResp, err := refreshToken(ctx, oauthClientID, token.RefreshToken)
 	if err != nil {
 		// Refresh failed — the user needs to re-authenticate.
 		return "", fmt.Errorf("token refresh failed, please run 'pop auth' again: %w", err)
