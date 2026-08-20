@@ -363,7 +363,7 @@ var RevokeCmd = &cobra.Command{
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
-		if err := revokeToken(ctx, token.ClientID, token.RefreshToken); err != nil {
+		if err := revokeToken(ctx, oauthClientID, token.RefreshToken); err != nil {
 			fmt.Println(errorStyle.Render("Failed to revoke token: " + err.Error()))
 		}
 		if err := deleteAuth(); err != nil {

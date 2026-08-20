@@ -315,8 +315,8 @@ func (m authModel) shutdownServer() {
 	_ = m.server.Shutdown(ctx)
 }
 
-// setupOAuthCmd performs dynamic client registration, PKCE generation, and
-// starts the callback HTTP server, returning everything needed to continue.
+// setupOAuthCmd performs PKCE generation and starts the callback HTTP server,
+// returning everything needed to continue.
 func setupOAuthCmd() tea.Cmd {
 	return func() tea.Msg {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -337,12 +337,7 @@ func setupOAuthCmd() tea.Cmd {
 			return authErrMsg{err: err}
 		}
 
-		clientID, err := registerClient(ctx, "http://"+oauthCallbackHost+oauthRedirectPath)
-		if err != nil {
-			return authErrMsg{err: err}
-		}
-
-		authURL, err := buildAuthURL(clientID, redirectURI, state, codeChallenge)
+		authURL, err := buildAuthURL(oauthClientID, redirectURI, state, codeChallenge)
 		if err != nil {
 			return authErrMsg{err: err}
 		}
@@ -350,7 +345,7 @@ func setupOAuthCmd() tea.Cmd {
 		server, resultCh := newCallbackServer(state, listener)
 
 		return authReadyMsg{
-			clientID:     clientID,
+			clientID:     oauthClientID,
 			codeVerifier: codeVerifier,
 			oauthState:   state,
 			redirectURI:  redirectURI,
@@ -385,7 +380,6 @@ func exchangeTokenCmd(clientID, code, redirectURI, codeVerifier string) tea.Cmd 
 			return authTokenMsg{err: err}
 		}
 		token := &OAuthToken{
-			ClientID:     clientID,
 			AccessToken:  tokResp.AccessToken,
 			RefreshToken: tokResp.RefreshToken,
 			ExpiresAt:    time.Now().Add(time.Duration(tokResp.ExpiresIn) * time.Second),

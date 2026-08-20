@@ -18,7 +18,7 @@ func openBrowser(rawURL string) {
 }
 
 // startOAuthFlow performs the full OAuth authorization flow without a TUI:
-// DCR → start callback server → open browser → exchange code → save tokens.
+// start callback server → open browser → exchange code → save tokens.
 //
 // It is used when stdin is not a terminal (piped input, SSH sessions with port
 // forwarding, or anywhere a Bubble Tea program is unsuitable). For interactive
@@ -42,12 +42,7 @@ func startOAuthFlow() error {
 		return err
 	}
 
-	clientID, err := registerClient(ctx, "http://"+oauthCallbackHost+oauthRedirectPath)
-	if err != nil {
-		return err
-	}
-
-	authURL, err := buildAuthURL(clientID, redirectURI, state, codeChallenge)
+	authURL, err := buildAuthURL(oauthClientID, redirectURI, state, codeChallenge)
 	if err != nil {
 		return err
 	}
@@ -74,13 +69,12 @@ func startOAuthFlow() error {
 		return errors.New("authorization timed out")
 	}
 
-	tokResp, err := exchangeCode(ctx, clientID, authCode, redirectURI, codeVerifier)
+	tokResp, err := exchangeCode(ctx, oauthClientID, authCode, redirectURI, codeVerifier)
 	if err != nil {
 		return err
 	}
 
 	token := &OAuthToken{
-		ClientID:     clientID,
 		AccessToken:  tokResp.AccessToken,
 		RefreshToken: tokResp.RefreshToken,
 		ExpiresAt:    time.Now().Add(time.Duration(tokResp.ExpiresIn) * time.Second),

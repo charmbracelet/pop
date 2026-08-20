@@ -69,13 +69,17 @@ Pop auto-detects the delivery method from environment and flags in `main.go`:
 
 ### OAuth Flow
 
-OAuth uses PKCE with Resend's OAuth 2.0 API:
+OAuth uses PKCE with Resend's OAuth 2.0 API with a pre-registered,
+hardcoded client ID (no dynamic client registration). This gives Pop a
+verified tag on the Resend OAuth consent screen.
 
-1. Dynamic client registration (`POST /oauth/register`)
-2. Start local callback server on `127.0.0.1`
-3. Open browser for authorization
-4. Exchange code for tokens
-5. Persist tokens to `auth.json` in the user config dir
+1. Start local callback server on `127.0.0.1`
+2. Open browser for authorization (scope: `emails:send`)
+3. Exchange code for tokens
+4. Persist tokens to `auth.json` in the user config dir
+
+The base URL defaults to `https://api.resend.com` but can be overridden via
+the `RESEND_BASE_URL` environment variable.
 
 Two entry points:
 
