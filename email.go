@@ -114,7 +114,22 @@ func sendSMTPEmail(to, cc, bcc []string, from, subject, body string, plaintext b
 		SetSubject(subject)
 
 	html := bytes.NewBufferString("")
-	convertErr := goldmark.Convert([]byte(body), html)
+	var convertErr error
+	if unsafe {
+		markdown := goldmark.New(
+			goldmark.WithRendererOptions(
+				renderer.WithUnsafe(),
+			),
+			goldmark.WithExtensions(
+				extension.Strikethrough,
+				extension.Table,
+				extension.Linkify,
+			),
+		)
+		convertErr = markdown.Convert([]byte(body), html)
+	} else {
+		convertErr = goldmark.Convert([]byte(body), html)
+	}
 
 	if (plaintext) || (convertErr != nil) {
 		email.SetBody(mail.TextPlain, body)
