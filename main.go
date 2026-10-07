@@ -374,6 +374,15 @@ var RevokeCmd = &cobra.Command{
 	},
 }
 
+// secretStringVarP defines a string flag for a secret (password, API key)
+// whose value is read from the given environment variable. Unlike the other
+// env-backed flags, the env value is not used as the flag default, so it is
+// never printed in --help or usage output.
+func secretStringVarP(cmd *cobra.Command, p *string, name, shorthand, env, usage string) {
+	cmd.Flags().StringVarP(p, name, shorthand, "", usage)
+	*p = os.Getenv(env)
+}
+
 func init() {
 	rootCmd.AddCommand(ManCmd)
 	rootCmd.AddCommand(AuthCmd)
@@ -406,14 +415,12 @@ func init() {
 	rootCmd.Flags().IntVarP(&smtpPort, "smtp.port", "P", envSMTPPort, "Port of the SMTP server"+commentStyle.Render("($"+PopSMTPPort+")"))
 	envSMTPUsername := os.Getenv(PopSMTPUsername)
 	rootCmd.Flags().StringVarP(&smtpUsername, "smtp.username", "U", envSMTPUsername, "Username of the SMTP server"+commentStyle.Render("($"+PopSMTPUsername+")"))
-	envSMTPPassword := os.Getenv(PopSMTPPassword)
-	rootCmd.Flags().StringVarP(&smtpPassword, "smtp.password", "p", envSMTPPassword, "Password of the SMTP server"+commentStyle.Render("($"+PopSMTPPassword+")"))
+	secretStringVarP(rootCmd, &smtpPassword, "smtp.password", "p", PopSMTPPassword, "Password of the SMTP server"+commentStyle.Render("($"+PopSMTPPassword+")"))
 	envSMTPEncryption := os.Getenv(PopSMTPEncryption)
 	rootCmd.Flags().StringVarP(&smtpEncryption, "smtp.encryption", "e", envSMTPEncryption, "Encryption type of the SMTP server (starttls, ssl, or none)"+commentStyle.Render("($"+PopSMTPEncryption+")"))
 	envInsecureSkipVerify := os.Getenv(PopSMTPInsecureSkipVerify) == envTrue
 	rootCmd.Flags().BoolVarP(&smtpInsecureSkipVerify, "smtp.insecure", "i", envInsecureSkipVerify, "Skip TLS verification with SMTP server"+commentStyle.Render("($"+PopSMTPInsecureSkipVerify+")"))
-	envResendAPIKey := os.Getenv(ResendAPIKey)
-	rootCmd.Flags().StringVarP(&resendAPIKey, "resend.key", "r", envResendAPIKey, "API key for the Resend.com"+commentStyle.Render("($"+ResendAPIKey+")"))
+	secretStringVarP(rootCmd, &resendAPIKey, "resend.key", "r", ResendAPIKey, "API key for the Resend.com"+commentStyle.Render("($"+ResendAPIKey+")"))
 	envOAuthResend := os.Getenv(PopOAuthResend) == envTrue
 	rootCmd.Flags().BoolVar(&oauthResend, "oauth", envOAuthResend, "Use OAuth for Resend authentication"+commentStyle.Render("($"+PopOAuthResend+")"))
 
