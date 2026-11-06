@@ -52,7 +52,8 @@ const (
 // Model is Pop's application model.
 type Model struct {
 	// state represents the current state of the application.
-	state State
+	state  State
+	styles composerStyles
 
 	// DeliveryMethod is whether we are using DeliveryMethod or Resend.
 	DeliveryMethod DeliveryMethod
@@ -90,74 +91,29 @@ func NewModel(defaults resend.SendEmailRequest, deliveryMethod DeliveryMethod) M
 	from := textinput.New()
 	from.Prompt = "From "
 	from.Placeholder = "me@example.com"
-	fromStyles := textinput.DefaultDarkStyles()
-	fromStyles.Focused.Prompt = activeLabelStyle
-	fromStyles.Focused.Text = activeTextStyle
-	fromStyles.Focused.Placeholder = placeholderStyle
-	fromStyles.Blurred.Prompt = labelStyle
-	fromStyles.Blurred.Text = textStyle
-	fromStyles.Blurred.Placeholder = placeholderStyle
-	fromStyles.Cursor.Color = whiteColor
-	from.SetStyles(fromStyles)
 	from.SetVirtualCursor(false)
 	from.SetValue(defaults.From)
 
 	to := textinput.New()
 	to.Prompt = "To "
-	toStyles := textinput.DefaultDarkStyles()
-	toStyles.Focused.Prompt = activeLabelStyle
-	toStyles.Focused.Text = activeTextStyle
-	toStyles.Focused.Placeholder = placeholderStyle
-	toStyles.Blurred.Prompt = labelStyle
-	toStyles.Blurred.Text = textStyle
-	toStyles.Blurred.Placeholder = placeholderStyle
-	toStyles.Cursor.Color = whiteColor
-	to.SetStyles(toStyles)
 	to.SetVirtualCursor(false)
 	to.Placeholder = "you@example.com"
 	to.SetValue(strings.Join(defaults.To, ToSeparator))
 
 	cc := textinput.New()
 	cc.Prompt = "Cc "
-	ccStyles := textinput.DefaultDarkStyles()
-	ccStyles.Focused.Prompt = activeLabelStyle
-	ccStyles.Focused.Text = activeTextStyle
-	ccStyles.Focused.Placeholder = placeholderStyle
-	ccStyles.Blurred.Prompt = labelStyle
-	ccStyles.Blurred.Text = textStyle
-	ccStyles.Blurred.Placeholder = placeholderStyle
-	ccStyles.Cursor.Color = whiteColor
-	cc.SetStyles(ccStyles)
 	cc.SetVirtualCursor(false)
 	cc.Placeholder = "cc@example.com"
 	cc.SetValue(strings.Join(defaults.Cc, ToSeparator))
 
 	bcc := textinput.New()
 	bcc.Prompt = "Bcc "
-	bccStyles := textinput.DefaultDarkStyles()
-	bccStyles.Focused.Prompt = activeLabelStyle
-	bccStyles.Focused.Text = activeTextStyle
-	bccStyles.Focused.Placeholder = placeholderStyle
-	bccStyles.Blurred.Prompt = labelStyle
-	bccStyles.Blurred.Text = textStyle
-	bccStyles.Blurred.Placeholder = placeholderStyle
-	bccStyles.Cursor.Color = whiteColor
-	bcc.SetStyles(bccStyles)
 	bcc.SetVirtualCursor(false)
 	bcc.Placeholder = "bcc@example.com"
 	bcc.SetValue(strings.Join(defaults.Bcc, ToSeparator))
 
 	subject := textinput.New()
 	subject.Prompt = "Subject "
-	subjectStyles := textinput.DefaultDarkStyles()
-	subjectStyles.Focused.Prompt = activeLabelStyle
-	subjectStyles.Focused.Text = activeTextStyle
-	subjectStyles.Focused.Placeholder = placeholderStyle
-	subjectStyles.Blurred.Prompt = labelStyle
-	subjectStyles.Blurred.Text = textStyle
-	subjectStyles.Blurred.Placeholder = placeholderStyle
-	subjectStyles.Cursor.Color = whiteColor
-	subject.SetStyles(subjectStyles)
 	subject.SetVirtualCursor(false)
 	subject.Placeholder = "Hello!"
 	subject.SetValue(defaults.Subject)
@@ -165,17 +121,6 @@ func NewModel(defaults resend.SendEmailRequest, deliveryMethod DeliveryMethod) M
 	body := textarea.New()
 	body.Placeholder = "# Email"
 	body.ShowLineNumbers = false
-	bodyStyles := textarea.DefaultDarkStyles()
-	bodyStyles.Focused.CursorLine = activeTextStyle
-	bodyStyles.Focused.Prompt = activeLabelStyle
-	bodyStyles.Focused.Text = activeTextStyle
-	bodyStyles.Focused.Placeholder = placeholderStyle
-	bodyStyles.Blurred.CursorLine = textStyle
-	bodyStyles.Blurred.Prompt = labelStyle
-	bodyStyles.Blurred.Text = textStyle
-	bodyStyles.Blurred.Placeholder = placeholderStyle
-	bodyStyles.Cursor.Color = whiteColor
-	body.SetStyles(bodyStyles)
 	body.SetVirtualCursor(false)
 	body.CharLimit = 4000
 	body.SetValue(defaults.Text)
@@ -239,6 +184,7 @@ func NewModel(defaults resend.SendEmailRequest, deliveryMethod DeliveryMethod) M
 		DeliveryMethod: deliveryMethod,
 	}
 
+	m.applyTheme(true)
 	m.focusActiveInput()
 
 	return m
@@ -246,7 +192,7 @@ func NewModel(defaults resend.SendEmailRequest, deliveryMethod DeliveryMethod) M
 
 // Init initializes the model.
 func (m Model) Init() tea.Cmd {
-	return nil
+	return tea.RequestBackgroundColor
 }
 
 type clearErrMsg struct{}
@@ -260,6 +206,9 @@ func clearErrAfter(d time.Duration) tea.Cmd {
 // Update is the update loop for the model.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.BackgroundColorMsg:
+		m.applyTheme(msg.IsDark())
+		return m, nil
 	case sendEmailSuccessMsg:
 		m.quitting = true
 		return m, tea.Quit
@@ -418,8 +367,8 @@ func (m *Model) blurInputs() {
 		m.Cc.Blur()
 		m.Bcc.Blur()
 	}
-	m.Attachments.Styles.Title = attachmentsTitleInactiveStyle
-	m.Attachments.SetDelegate(attachmentDelegate{false})
+	m.Attachments.Styles.Title = m.styles.label
+	m.Attachments.SetDelegate(attachmentDelegate{styles: m.styles})
 }
 
 func (m *Model) focusActiveInput() {
@@ -444,7 +393,7 @@ func (m *Model) focusActiveInput() {
 		m.Body.CursorEnd()
 	case editingAttachments:
 		m.Attachments.Styles.Title = attachmentsTitleActiveStyle
-		m.Attachments.SetDelegate(attachmentDelegate{true})
+		m.Attachments.SetDelegate(attachmentDelegate{focused: true, styles: m.styles})
 	case hoveringSendButton, pickingFile, sendingEmail:
 	}
 }
