@@ -26,7 +26,7 @@ func TestComposerIgnoresMisreportedBackground(t *testing.T) {
 		}
 		for name, input := range map[string]textinput.Model{"from": m.From, "to": m.To, "cc": m.Cc, "bcc": m.Bcc, "subject": m.Subject} {
 			s := input.Styles()
-			for _, style := range []lipgloss.Style{s.Focused.Prompt, s.Blurred.Prompt, s.Focused.Text, s.Blurred.Text, s.Focused.Placeholder, s.Blurred.Placeholder} {
+			for _, style := range []lipgloss.Style{s.Blurred.Prompt, s.Focused.Text, s.Blurred.Text, s.Focused.Placeholder, s.Blurred.Placeholder} {
 				if _, inherited := style.GetForeground().(lipgloss.NoColor); !inherited {
 					t.Errorf("%s must inherit foreground", name)
 				}
@@ -34,8 +34,11 @@ func TestComposerIgnoresMisreportedBackground(t *testing.T) {
 					t.Errorf("%s must inherit background", name)
 				}
 			}
-			if !s.Focused.Prompt.GetBold() || !s.Focused.Placeholder.GetItalic() {
-				t.Errorf("%s should distinguish focus and placeholders without dimming", name)
+			if !reflect.DeepEqual(s.Focused.Prompt.GetForeground(), activeLabelStyle.GetForeground()) {
+				t.Errorf("%s lost the original blue-purple accent", name)
+			}
+			if s.Focused.Placeholder.GetItalic() || s.Blurred.Placeholder.GetItalic() || s.Focused.Prompt.GetBold() {
+				t.Errorf("%s unexpectedly changes typography", name)
 			}
 		}
 	}

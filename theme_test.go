@@ -82,7 +82,7 @@ func TestComposerInheritedFallback(t *testing.T) {
 	m := NewModel(resend.SendEmailRequest{}, SMTP)
 	for name, input := range map[string]textinput.Model{"from": m.From, "to": m.To, "cc": m.Cc, "bcc": m.Bcc, "subject": m.Subject} {
 		styles := input.Styles()
-		for _, style := range []lipgloss.Style{styles.Focused.Text, styles.Blurred.Text, styles.Focused.Prompt, styles.Blurred.Prompt, styles.Focused.Placeholder, styles.Blurred.Placeholder} {
+		for _, style := range []lipgloss.Style{styles.Focused.Text, styles.Blurred.Text, styles.Blurred.Prompt, styles.Focused.Placeholder, styles.Blurred.Placeholder} {
 			if _, inherited := style.GetForeground().(lipgloss.NoColor); !inherited {
 				t.Errorf("%s assumes a background before detection", name)
 			}

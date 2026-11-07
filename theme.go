@@ -21,15 +21,15 @@ type composerStyles struct {
 func newComposerStyles() composerStyles {
 	// Use the terminal's foreground on every background. Some embedded terminals
 	// report the application's theme rather than the visible terminal background.
-	// Bold labels and italic placeholders distinguish roles without dimming text.
+	// Preserve the original accent colors without dimming editable text.
 	return composerStyles{
-		activeLabel:     activeLabelStyle.UnsetForeground().Bold(true),
+		activeLabel:     activeLabelStyle,
 		link:            linkStyle.UnsetForeground(),
-		attachmentTitle: attachmentsTitleActiveStyle.UnsetForeground().Bold(true),
+		attachmentTitle: attachmentsTitleActiveStyle,
 		activeText:      activeTextStyle.UnsetForeground(),
 		text:            textStyle.UnsetForeground(),
 		label:           labelStyle.UnsetForeground(),
-		placeholder:     placeholderStyle.UnsetForeground().Italic(true),
+		placeholder:     placeholderStyle.UnsetForeground(),
 	}
 }
 
@@ -63,10 +63,10 @@ func (m *Model) applyTheme() {
 	bodyStyles.Blurred.EndOfBuffer = m.styles.placeholder
 	m.Body.SetStyles(bodyStyles)
 	m.help.Styles = help.Styles{
-		ShortKey:       m.styles.label.Bold(true),
+		ShortKey:       m.styles.label,
 		ShortDesc:      m.styles.text,
 		ShortSeparator: m.styles.label,
-		FullKey:        m.styles.label.Bold(true),
+		FullKey:        m.styles.label,
 		FullDesc:       m.styles.text,
 		FullSeparator:  m.styles.label,
 		Ellipsis:       m.styles.label,
