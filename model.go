@@ -392,7 +392,7 @@ func (m *Model) focusActiveInput() {
 		m.Body.Focus()
 		m.Body.CursorEnd()
 	case editingAttachments:
-		m.Attachments.Styles.Title = attachmentsTitleActiveStyle
+		m.Attachments.Styles.Title = m.styles.attachmentTitle
 		m.Attachments.SetDelegate(attachmentDelegate{focused: true, styles: m.styles})
 	case hoveringSendButton, pickingFile, sendingEmail:
 	}
@@ -406,7 +406,7 @@ func (m Model) View() tea.View {
 
 	switch m.state {
 	case pickingFile:
-		return tea.NewView("\n" + activeLabelStyle.Render("Attachments") + " " + commentStyle.Render(m.filepicker.CurrentDirectory) +
+		return tea.NewView("\n" + m.styles.activeLabel.Render("Attachments") + " " + commentStyle.Render(m.filepicker.CurrentDirectory) +
 			"\n\n" + m.filepicker.View())
 	case sendingEmail:
 		return tea.NewView("\n " + m.loadingSpinner.View() + "Sending email")

@@ -11,20 +11,29 @@ import (
 // composerStyles contains the colors that depend on the terminal background.
 // Keep these on the model so a background response does not change global styles.
 type composerStyles struct {
-	activeText  lipgloss.Style
-	text        lipgloss.Style
-	label       lipgloss.Style
-	placeholder lipgloss.Style
+	activeLabel     lipgloss.Style
+	link            lipgloss.Style
+	attachmentTitle lipgloss.Style
+	activeText      lipgloss.Style
+	text            lipgloss.Style
+	label           lipgloss.Style
+	placeholder     lipgloss.Style
 }
 
 func newComposerStyles(isDark bool) composerStyles {
 	s := composerStyles{
-		activeText:  activeTextStyle,
-		text:        textStyle,
-		label:       labelStyle,
-		placeholder: placeholderStyle,
+		activeLabel:     activeLabelStyle.Foreground(charmtone.Hazy),
+		link:            linkStyle,
+		attachmentTitle: attachmentsTitleActiveStyle,
+		activeText:      activeTextStyle,
+		text:            textStyle,
+		label:           labelStyle,
+		placeholder:     placeholderStyle.Foreground(charmtone.Squid),
 	}
 	if !isDark {
+		s.activeLabel = s.activeLabel.Foreground(charmtone.Jelly)
+		s.link = s.link.Foreground(charmtone.Pepper)
+		s.attachmentTitle = s.attachmentTitle.Foreground(charmtone.Jelly)
 		s.activeText = s.activeText.Foreground(charmtone.Pepper)
 		s.text = s.text.Foreground(charmtone.Iron)
 		s.label = s.label.Foreground(charmtone.Oyster)
@@ -38,7 +47,7 @@ func newComposerStyles(isDark bool) composerStyles {
 func (m *Model) applyTheme(isDark bool) {
 	m.styles = newComposerStyles(isDark)
 	inputStyles := textinput.DefaultStyles(isDark)
-	inputStyles.Focused.Prompt = activeLabelStyle
+	inputStyles.Focused.Prompt = m.styles.activeLabel
 	inputStyles.Focused.Text = m.styles.activeText
 	inputStyles.Focused.Placeholder = m.styles.placeholder
 	inputStyles.Blurred.Prompt = m.styles.label
@@ -51,7 +60,7 @@ func (m *Model) applyTheme(isDark bool) {
 
 	bodyStyles := textarea.DefaultStyles(isDark)
 	bodyStyles.Focused.CursorLine = m.styles.activeText
-	bodyStyles.Focused.Prompt = activeLabelStyle
+	bodyStyles.Focused.Prompt = m.styles.activeLabel
 	bodyStyles.Focused.Text = m.styles.activeText
 	bodyStyles.Focused.Placeholder = m.styles.placeholder
 	bodyStyles.Blurred.CursorLine = m.styles.text
@@ -65,7 +74,7 @@ func (m *Model) applyTheme(isDark bool) {
 	focused := m.state == editingAttachments
 	m.Attachments.Styles.Title = m.styles.label
 	if focused {
-		m.Attachments.Styles.Title = attachmentsTitleActiveStyle
+		m.Attachments.Styles.Title = m.styles.attachmentTitle
 	}
 	m.Attachments.Styles.TitleBar = m.styles.label
 	m.Attachments.Styles.NoItems = m.styles.placeholder

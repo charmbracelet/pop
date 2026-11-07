@@ -20,8 +20,9 @@ Launch the TUI
 pop
 ```
 
-The composer adapts its text colors to light and dark terminal backgrounds.
-If the terminal does not report its background color, the existing dark styling
+The composer adapts its text, labels, placeholders, and sent summary to light
+and dark terminal backgrounds.
+If the terminal does not report its background color, the dark styling
 is used.
 
 ## Command Line Interface

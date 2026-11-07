@@ -94,7 +94,7 @@ func TestBackgroundPreservesAttachmentFocus(t *testing.T) {
 	m.focusActiveInput()
 	updated, _ := m.Update(tea.BackgroundColorMsg{Color: color.White})
 	m = updated.(Model)
-	if m.state != editingAttachments || !reflect.DeepEqual(m.Attachments.Styles.Title, attachmentsTitleActiveStyle) {
+	if m.state != editingAttachments || !reflect.DeepEqual(m.Attachments.Styles.Title, m.styles.attachmentTitle) {
 		t.Fatal("theme change lost attachment focus styling")
 	}
 	m.blurInputs()
