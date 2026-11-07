@@ -2,90 +2,62 @@ package main
 
 import (
 	"image/color"
+	"reflect"
 	"strings"
 	"testing"
 
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
-	"github.com/charmbracelet/x/exp/charmtone"
 	"github.com/resendlabs/resend-go"
 )
 
-func TestThemeLabelsAndPlaceholders(t *testing.T) {
-	for _, tc := range []struct {
-		name                                   string
-		background, label, active, placeholder color.Color
-	}{
-		{"light", color.White, charmtone.Oyster, charmtone.Jelly, charmtone.Oyster},
-		{"dark", color.Black, charmtone.Steam, charmtone.Hazy, charmtone.Squid},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			m := NewModel(resend.SendEmailRequest{}, SMTP)
-			updated, _ := m.Update(tea.BackgroundColorMsg{Color: tc.background})
-			m = updated.(Model)
-			for name, input := range map[string]textinput.Model{"from": m.From, "to": m.To, "cc": m.Cc, "bcc": m.Bcc, "subject": m.Subject} {
-				s := input.Styles()
-				if !sameColor(s.Focused.Prompt.GetForeground(), tc.active) || !sameColor(s.Blurred.Prompt.GetForeground(), tc.label) ||
-					!sameColor(s.Focused.Placeholder.GetForeground(), tc.placeholder) || !sameColor(s.Blurred.Placeholder.GetForeground(), tc.placeholder) {
-					t.Errorf("%s labels or placeholders use the wrong palette", name)
+func TestComposerIgnoresMisreportedBackground(t *testing.T) {
+	m := NewModel(resend.SendEmailRequest{}, SMTP)
+	before := m.styles
+	// A light response can arrive while an embedded terminal is visibly dark,
+	// and vice versa. Neither may replace the user's terminal foreground.
+	for _, background := range []color.Color{color.White, color.Black} {
+		updated, _ := m.Update(tea.BackgroundColorMsg{Color: background})
+		m = updated.(Model)
+		if !reflect.DeepEqual(before, m.styles) {
+			t.Fatal("background response overrode terminal-native styles")
+		}
+		for name, input := range map[string]textinput.Model{"from": m.From, "to": m.To, "cc": m.Cc, "bcc": m.Bcc, "subject": m.Subject} {
+			s := input.Styles()
+			for _, style := range []lipgloss.Style{s.Focused.Prompt, s.Blurred.Prompt, s.Focused.Text, s.Blurred.Text, s.Focused.Placeholder, s.Blurred.Placeholder} {
+				if _, inherited := style.GetForeground().(lipgloss.NoColor); !inherited {
+					t.Errorf("%s must inherit foreground", name)
+				}
+				if _, inherited := style.GetBackground().(lipgloss.NoColor); !inherited {
+					t.Errorf("%s must inherit background", name)
 				}
 			}
-			s := m.Body.Styles()
-			if !sameColor(s.Focused.Prompt.GetForeground(), tc.active) || !sameColor(s.Blurred.Prompt.GetForeground(), tc.label) ||
-				!sameColor(s.Focused.Placeholder.GetForeground(), tc.placeholder) || !sameColor(s.Blurred.Placeholder.GetForeground(), tc.placeholder) {
-				t.Error("body labels or placeholders use the wrong palette")
+			if !s.Focused.Prompt.GetBold() || !s.Focused.Placeholder.GetItalic() {
+				t.Errorf("%s should distinguish focus and placeholders without dimming", name)
 			}
-			m.blurInputs()
-			m.state = editingAttachments
-			m.focusActiveInput()
-			if !sameColor(m.Attachments.Styles.Title.GetForeground(), m.styles.attachmentTitle.GetForeground()) {
-				t.Error("focused attachment title lost its palette")
-			}
-		})
+		}
 	}
 }
 
-func TestSummaryUsesDetectedTheme(t *testing.T) {
+func TestSummaryPreservesTerminalColors(t *testing.T) {
 	recipients := []string{"first@example.test", "second@example.test"}
 	const subject = "Theme test"
 	const want = "\n  Email \"Theme test\" sent to first@example.test, second@example.test\n\n"
-	for _, tc := range []struct {
-		name                           string
-		background, subject, recipient color.Color
-	}{
-		{"light", color.White, charmtone.Pepper, charmtone.Pepper},
-		{"dark", color.Black, charmtone.Soda, charmtone.Guac},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			m := NewModel(resend.SendEmailRequest{}, SMTP)
-			updated, _ := m.Update(tea.BackgroundColorMsg{Color: tc.background})
-			m = updated.(Model)
-			got := m.styles.emailSummary(recipients, subject)
-			if ansi.Strip(got) != want {
-				t.Fatalf("unexpected summary: %q", got)
-			}
-			if !sameColor(m.styles.activeText.GetForeground(), tc.subject) || !sameColor(m.styles.link.GetForeground(), tc.recipient) {
-				t.Error("summary palette is inappropriate for the detected background")
-			}
-			if !strings.Contains(got, m.styles.activeText.Render("\""+subject+"\"")) || !strings.Contains(got, m.styles.link.Render(recipients[0])) {
-				t.Error("summary does not apply the theme to its subject and recipients")
-			}
-		})
-	}
-	cli := emailSummary(recipients, subject)
-	if ansi.Strip(cli) != want || strings.Contains(cli, "38;") {
-		t.Errorf("CLI summary should inherit foreground: %q", cli)
-	}
-}
-
-func TestSummaryWithoutBackgroundResponse(t *testing.T) {
 	m := NewModel(resend.SendEmailRequest{}, SMTP)
-	summary := m.styles.emailSummary([]string{"recipient@example.test"}, "Subject")
-	if strings.Contains(summary, "38;") || strings.Contains(summary, "48;") {
-		t.Fatalf("unknown-background summary forces a color: %q", summary)
+	summaries := []string{emailSummary(recipients, subject), m.styles.emailSummary(recipients, subject)}
+	for _, background := range []color.Color{color.White, color.Black} {
+		updated, _ := m.Update(tea.BackgroundColorMsg{Color: background})
+		m = updated.(Model)
+		summaries = append(summaries, m.styles.emailSummary(recipients, subject))
 	}
-	if ansi.Strip(summary) != "\n  Email \"Subject\" sent to recipient@example.test\n\n" {
-		t.Fatalf("unexpected summary: %q", summary)
+	for _, summary := range summaries {
+		if ansi.Strip(summary) != want {
+			t.Fatalf("unexpected summary: %q", summary)
+		}
+		if strings.Contains(summary, "38;") || strings.Contains(summary, "48;") {
+			t.Fatalf("summary overrides terminal colors: %q", summary)
+		}
 	}
 }

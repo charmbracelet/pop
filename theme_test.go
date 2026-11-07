@@ -8,7 +8,6 @@ import (
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
-	"github.com/charmbracelet/x/exp/charmtone"
 	"github.com/resendlabs/resend-go"
 )
 
@@ -29,29 +28,27 @@ func TestComposerBackground(t *testing.T) {
 	beforeBodyCursor := m.Body.Cursor()
 	beforeHelp := m.help.Styles
 
-	if m.Init() == nil {
-		t.Fatal("composer must request the terminal background")
+	if m.Init() != nil {
+		t.Fatal("composer must not depend on background detection")
 	}
 	updated, cmd := m.Update(tea.BackgroundColorMsg{Color: color.White})
 	if cmd != nil {
 		t.Fatal("background response must not start another command")
 	}
 	m = updated.(Model)
-	for name, input := range map[string]textinput.Model{
-		"from": m.From, "to": m.To, "cc": m.Cc, "bcc": m.Bcc, "subject": m.Subject,
-	} {
-		if got := input.Styles().Focused.Text.GetForeground(); !sameColor(got, charmtone.Pepper) {
-			t.Errorf("%s focused text should use the light palette", name)
+	for name, input := range map[string]textinput.Model{"from": m.From, "to": m.To, "cc": m.Cc, "bcc": m.Bcc, "subject": m.Subject} {
+		if _, inherited := input.Styles().Focused.Text.GetForeground().(lipgloss.NoColor); !inherited {
+			t.Errorf("%s must inherit foreground despite background response", name)
 		}
-		if got := input.Styles().Cursor.Color; !sameColor(got, charmtone.Pepper) {
-			t.Errorf("%s cursor should use the light palette", name)
+		if input.Styles().Cursor.Color != nil {
+			t.Errorf("%s must retain terminal cursor color", name)
 		}
 	}
-	if !sameColor(m.Body.Styles().Focused.Text.GetForeground(), charmtone.Pepper) {
-		t.Error("body should use the light palette")
+	if _, inherited := m.Body.Styles().Focused.Text.GetForeground().(lipgloss.NoColor); !inherited {
+		t.Error("body must inherit terminal foreground")
 	}
-	if reflect.DeepEqual(beforeHelp, m.help.Styles) {
-		t.Error("help styles should adapt to the light background")
+	if !reflect.DeepEqual(beforeHelp, m.help.Styles) {
+		t.Error("background response must not override terminal-native help")
 	}
 	if m.From.Value() != "sender@example.com" || m.To.Value() != "recipient@example.com" ||
 		m.Cc.Value() != "cc@example.com" || m.Bcc.Value() != "bcc@example.com" ||
@@ -73,8 +70,8 @@ func TestComposerBackground(t *testing.T) {
 	// Subsequent responses must allow switching back.
 	updated, _ = m.Update(tea.BackgroundColorMsg{Color: color.Black})
 	m = updated.(Model)
-	if !sameColor(m.From.Styles().Focused.Text.GetForeground(), charmtone.Soda) {
-		t.Error("dark background should restore the existing text color")
+	if _, inherited := m.From.Styles().Focused.Text.GetForeground().(lipgloss.NoColor); !inherited {
+		t.Error("dark background response must not override terminal foreground")
 	}
 	if _, inherited := other.From.Styles().Focused.Text.GetForeground().(lipgloss.NoColor); !inherited {
 		t.Error("a background response must not change another model")
@@ -115,13 +112,9 @@ func TestBackgroundPreservesAttachmentFocus(t *testing.T) {
 		t.Fatal("theme change lost attachment focus styling")
 	}
 	m.blurInputs()
-	if !sameColor(m.Attachments.Styles.Title.GetForeground(), charmtone.Oyster) {
-		t.Fatal("blurred attachment title should keep the light palette")
+	if _, inherited := m.Attachments.Styles.Title.GetForeground().(lipgloss.NoColor); !inherited {
+		t.Fatal("blurred attachment title should inherit terminal foreground")
 	}
-}
-
-func sameColor(a, b color.Color) bool {
-	return color.RGBAModel.Convert(a) == color.RGBAModel.Convert(b)
 }
 
 func TestBackgroundPreservesBodyEditing(t *testing.T) {

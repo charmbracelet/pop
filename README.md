@@ -20,10 +20,9 @@ Launch the TUI
 pop
 ```
 
-The composer adapts its text, labels, placeholders, and sent summary to light
-and dark terminal backgrounds.
-If the terminal does not report its background color, text inherits the
-terminal foreground instead of assuming a dark background.
+The composer and sent summary use the terminal foreground, keeping text readable
+on light and dark backgrounds even when background detection is unavailable or
+inaccurate. Focused labels are bold and placeholders are italic.
 
 ## Command Line Interface
 

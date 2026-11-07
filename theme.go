@@ -5,11 +5,9 @@ import (
 	"charm.land/bubbles/v2/textarea"
 	"charm.land/bubbles/v2/textinput"
 	"charm.land/lipgloss/v2"
-	"github.com/charmbracelet/x/exp/charmtone"
 )
 
-// composerStyles contains the colors that depend on the terminal background.
-// Keep these on the model so a background response does not change global styles.
+// composerStyles groups terminal-native styles for one composer.
 type composerStyles struct {
 	activeLabel     lipgloss.Style
 	link            lipgloss.Style
@@ -20,64 +18,38 @@ type composerStyles struct {
 	placeholder     lipgloss.Style
 }
 
-func newComposerStyles(isDark bool) composerStyles {
-	s := composerStyles{
-		activeLabel:     activeLabelStyle.Foreground(charmtone.Hazy),
-		link:            linkStyle,
-		attachmentTitle: attachmentsTitleActiveStyle,
-		activeText:      activeTextStyle,
-		text:            textStyle,
-		label:           labelStyle,
-		placeholder:     placeholderStyle.Foreground(charmtone.Squid),
+func newComposerStyles() composerStyles {
+	// Use the terminal's foreground on every background. Some embedded terminals
+	// report the application's theme rather than the visible terminal background.
+	// Bold labels and italic placeholders distinguish roles without dimming text.
+	return composerStyles{
+		activeLabel:     activeLabelStyle.UnsetForeground().Bold(true),
+		link:            linkStyle.UnsetForeground(),
+		attachmentTitle: attachmentsTitleActiveStyle.UnsetForeground().Bold(true),
+		activeText:      activeTextStyle.UnsetForeground(),
+		text:            textStyle.UnsetForeground(),
+		label:           labelStyle.UnsetForeground(),
+		placeholder:     placeholderStyle.UnsetForeground().Italic(true),
 	}
-	if !isDark {
-		s.activeLabel = s.activeLabel.Foreground(charmtone.Jelly)
-		s.link = s.link.Foreground(charmtone.Pepper)
-		s.attachmentTitle = s.attachmentTitle.Foreground(charmtone.Jelly)
-		s.activeText = s.activeText.Foreground(charmtone.Pepper)
-		s.text = s.text.Foreground(charmtone.Iron)
-		s.label = s.label.Foreground(charmtone.Oyster)
-		s.placeholder = s.placeholder.Foreground(charmtone.Oyster)
-	}
-	return s
 }
 
-// applyTheme updates styles in place, preserving the draft and editing state.
-func (m *Model) applyTheme(isDark bool) {
-	m.applyComposerStyles(newComposerStyles(isDark), isDark)
-}
-
-// applyDefaultTheme uses the terminal foreground until its background is known.
-// Assuming a dark background makes text unreadable on light terminals that do
-// not answer OSC 11 queries.
-func (m *Model) applyDefaultTheme() {
-	m.applyComposerStyles(composerStyles{
-		activeLabel:     lipgloss.NewStyle().Bold(true),
-		link:            lipgloss.NewStyle().Underline(true),
-		attachmentTitle: lipgloss.NewStyle().Bold(true),
-		placeholder:     lipgloss.NewStyle().Italic(true),
-	}, true)
-}
-
-func (m *Model) applyComposerStyles(styles composerStyles, isDark bool) {
-	m.styles = styles
-	cursorColor := m.styles.activeText.GetForeground()
-	if _, inherited := cursorColor.(lipgloss.NoColor); inherited {
-		cursorColor = nil
-	}
-	inputStyles := textinput.DefaultStyles(isDark)
+// applyTheme uses terminal-native colors, preserving contrast even when a
+// background query is unanswered or returns a stale or incorrect color.
+func (m *Model) applyTheme() {
+	m.styles = newComposerStyles()
+	inputStyles := textinput.DefaultStyles(true)
 	inputStyles.Focused.Prompt = m.styles.activeLabel
 	inputStyles.Focused.Text = m.styles.activeText
 	inputStyles.Focused.Placeholder = m.styles.placeholder
 	inputStyles.Blurred.Prompt = m.styles.label
 	inputStyles.Blurred.Text = m.styles.text
 	inputStyles.Blurred.Placeholder = m.styles.placeholder
-	inputStyles.Cursor.Color = cursorColor
+	inputStyles.Cursor.Color = nil
 	for _, input := range []*textinput.Model{&m.From, &m.To, &m.Cc, &m.Bcc, &m.Subject} {
 		input.SetStyles(inputStyles)
 	}
 
-	bodyStyles := textarea.DefaultStyles(isDark)
+	bodyStyles := textarea.DefaultStyles(true)
 	bodyStyles.Focused.CursorLine = m.styles.activeText
 	bodyStyles.Focused.Prompt = m.styles.activeLabel
 	bodyStyles.Focused.Text = m.styles.activeText
@@ -86,7 +58,7 @@ func (m *Model) applyComposerStyles(styles composerStyles, isDark bool) {
 	bodyStyles.Blurred.Prompt = m.styles.label
 	bodyStyles.Blurred.Text = m.styles.text
 	bodyStyles.Blurred.Placeholder = m.styles.placeholder
-	bodyStyles.Cursor.Color = cursorColor
+	bodyStyles.Cursor.Color = nil
 	bodyStyles.Focused.EndOfBuffer = m.styles.placeholder
 	bodyStyles.Blurred.EndOfBuffer = m.styles.placeholder
 	m.Body.SetStyles(bodyStyles)

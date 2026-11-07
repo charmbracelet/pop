@@ -184,7 +184,7 @@ func NewModel(defaults resend.SendEmailRequest, deliveryMethod DeliveryMethod) M
 		DeliveryMethod: deliveryMethod,
 	}
 
-	m.applyDefaultTheme()
+	m.applyTheme()
 	m.focusActiveInput()
 
 	return m
@@ -192,7 +192,7 @@ func NewModel(defaults resend.SendEmailRequest, deliveryMethod DeliveryMethod) M
 
 // Init initializes the model.
 func (m Model) Init() tea.Cmd {
-	return tea.RequestBackgroundColor
+	return nil
 }
 
 type clearErrMsg struct{}
@@ -206,9 +206,6 @@ func clearErrAfter(d time.Duration) tea.Cmd {
 // Update is the update loop for the model.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.BackgroundColorMsg:
-		m.applyTheme(msg.IsDark())
-		return m, nil
 	case sendEmailSuccessMsg:
 		m.quitting = true
 		return m, tea.Quit
