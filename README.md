@@ -22,8 +22,8 @@ pop
 
 The composer adapts its text, labels, placeholders, and sent summary to light
 and dark terminal backgrounds.
-If the terminal does not report its background color, the dark styling
-is used.
+If the terminal does not report its background color, text inherits the
+terminal foreground instead of assuming a dark background.
 
 ## Command Line Interface
 

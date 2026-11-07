@@ -7,6 +7,7 @@ import (
 
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/exp/charmtone"
 	"github.com/resendlabs/resend-go"
 )
@@ -65,7 +66,7 @@ func TestComposerBackground(t *testing.T) {
 		t.Fatal("background response changed attachments")
 	}
 
-	if !sameColor(other.From.Styles().Focused.Text.GetForeground(), charmtone.Soda) {
+	if _, inherited := other.From.Styles().Focused.Text.GetForeground().(lipgloss.NoColor); !inherited {
 		t.Error("a light background response must not change another model")
 	}
 
@@ -75,15 +76,31 @@ func TestComposerBackground(t *testing.T) {
 	if !sameColor(m.From.Styles().Focused.Text.GetForeground(), charmtone.Soda) {
 		t.Error("dark background should restore the existing text color")
 	}
-	if !sameColor(other.From.Styles().Focused.Text.GetForeground(), charmtone.Soda) {
+	if _, inherited := other.From.Styles().Focused.Text.GetForeground().(lipgloss.NoColor); !inherited {
 		t.Error("a background response must not change another model")
 	}
 }
 
-func TestComposerDarkFallback(t *testing.T) {
+func TestComposerInheritedFallback(t *testing.T) {
 	m := NewModel(resend.SendEmailRequest{}, SMTP)
-	if !sameColor(m.From.Styles().Focused.Text.GetForeground(), charmtone.Soda) {
-		t.Fatal("without a background response, preserve the existing dark palette")
+	for name, input := range map[string]textinput.Model{"from": m.From, "to": m.To, "cc": m.Cc, "bcc": m.Bcc, "subject": m.Subject} {
+		styles := input.Styles()
+		for _, style := range []lipgloss.Style{styles.Focused.Text, styles.Blurred.Text, styles.Focused.Prompt, styles.Blurred.Prompt, styles.Focused.Placeholder, styles.Blurred.Placeholder} {
+			if _, inherited := style.GetForeground().(lipgloss.NoColor); !inherited {
+				t.Errorf("%s assumes a background before detection", name)
+			}
+		}
+		if styles.Cursor.Color != nil {
+			t.Errorf("%s overrides the default cursor color", name)
+		}
+	}
+	for _, style := range []lipgloss.Style{m.Body.Styles().Focused.Text, m.Body.Styles().Blurred.Text, m.Body.Styles().Focused.Placeholder, m.Body.Styles().Blurred.Placeholder, m.help.Styles.ShortKey, m.help.Styles.ShortDesc, m.Attachments.Styles.NoItems, m.styles.link} {
+		if _, inherited := style.GetForeground().(lipgloss.NoColor); !inherited {
+			t.Error("unknown background must inherit the terminal foreground")
+		}
+	}
+	if m.Body.Styles().Cursor.Color != nil {
+		t.Error("body overrides the default cursor color")
 	}
 }
 

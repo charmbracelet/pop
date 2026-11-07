@@ -184,7 +184,7 @@ func NewModel(defaults resend.SendEmailRequest, deliveryMethod DeliveryMethod) M
 		DeliveryMethod: deliveryMethod,
 	}
 
-	m.applyTheme(true)
+	m.applyDefaultTheme()
 	m.focusActiveInput()
 
 	return m

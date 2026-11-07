@@ -78,3 +78,14 @@ func TestSummaryUsesDetectedTheme(t *testing.T) {
 		t.Errorf("CLI summary should inherit foreground: %q", cli)
 	}
 }
+
+func TestSummaryWithoutBackgroundResponse(t *testing.T) {
+	m := NewModel(resend.SendEmailRequest{}, SMTP)
+	summary := m.styles.emailSummary([]string{"recipient@example.test"}, "Subject")
+	if strings.Contains(summary, "38;") || strings.Contains(summary, "48;") {
+		t.Fatalf("unknown-background summary forces a color: %q", summary)
+	}
+	if ansi.Strip(summary) != "\n  Email \"Subject\" sent to recipient@example.test\n\n" {
+		t.Fatalf("unexpected summary: %q", summary)
+	}
+}

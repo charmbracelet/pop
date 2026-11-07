@@ -43,9 +43,28 @@ func newComposerStyles(isDark bool) composerStyles {
 }
 
 // applyTheme updates styles in place, preserving the draft and editing state.
-// Dark styles remain the fallback when the terminal does not answer the query.
 func (m *Model) applyTheme(isDark bool) {
-	m.styles = newComposerStyles(isDark)
+	m.applyComposerStyles(newComposerStyles(isDark), isDark)
+}
+
+// applyDefaultTheme uses the terminal foreground until its background is known.
+// Assuming a dark background makes text unreadable on light terminals that do
+// not answer OSC 11 queries.
+func (m *Model) applyDefaultTheme() {
+	m.applyComposerStyles(composerStyles{
+		activeLabel:     lipgloss.NewStyle().Bold(true),
+		link:            lipgloss.NewStyle().Underline(true),
+		attachmentTitle: lipgloss.NewStyle().Bold(true),
+		placeholder:     lipgloss.NewStyle().Italic(true),
+	}, true)
+}
+
+func (m *Model) applyComposerStyles(styles composerStyles, isDark bool) {
+	m.styles = styles
+	cursorColor := m.styles.activeText.GetForeground()
+	if _, inherited := cursorColor.(lipgloss.NoColor); inherited {
+		cursorColor = nil
+	}
 	inputStyles := textinput.DefaultStyles(isDark)
 	inputStyles.Focused.Prompt = m.styles.activeLabel
 	inputStyles.Focused.Text = m.styles.activeText
@@ -53,7 +72,7 @@ func (m *Model) applyTheme(isDark bool) {
 	inputStyles.Blurred.Prompt = m.styles.label
 	inputStyles.Blurred.Text = m.styles.text
 	inputStyles.Blurred.Placeholder = m.styles.placeholder
-	inputStyles.Cursor.Color = m.styles.activeText.GetForeground()
+	inputStyles.Cursor.Color = cursorColor
 	for _, input := range []*textinput.Model{&m.From, &m.To, &m.Cc, &m.Bcc, &m.Subject} {
 		input.SetStyles(inputStyles)
 	}
@@ -67,9 +86,19 @@ func (m *Model) applyTheme(isDark bool) {
 	bodyStyles.Blurred.Prompt = m.styles.label
 	bodyStyles.Blurred.Text = m.styles.text
 	bodyStyles.Blurred.Placeholder = m.styles.placeholder
-	bodyStyles.Cursor.Color = m.styles.activeText.GetForeground()
+	bodyStyles.Cursor.Color = cursorColor
+	bodyStyles.Focused.EndOfBuffer = m.styles.placeholder
+	bodyStyles.Blurred.EndOfBuffer = m.styles.placeholder
 	m.Body.SetStyles(bodyStyles)
-	m.help.Styles = help.DefaultStyles(isDark)
+	m.help.Styles = help.Styles{
+		ShortKey:       m.styles.label.Bold(true),
+		ShortDesc:      m.styles.text,
+		ShortSeparator: m.styles.label,
+		FullKey:        m.styles.label.Bold(true),
+		FullDesc:       m.styles.text,
+		FullSeparator:  m.styles.label,
+		Ellipsis:       m.styles.label,
+	}
 
 	focused := m.state == editingAttachments
 	m.Attachments.Styles.Title = m.styles.label
