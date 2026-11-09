@@ -37,9 +37,6 @@ func TestComposerIgnoresMisreportedBackground(t *testing.T) {
 			if !reflect.DeepEqual(s.Focused.Prompt.GetForeground(), activeLabelStyle.GetForeground()) {
 				t.Errorf("%s lost the original blue-purple accent", name)
 			}
-			if s.Focused.Placeholder.GetItalic() || s.Blurred.Placeholder.GetItalic() || s.Focused.Prompt.GetBold() {
-				t.Errorf("%s unexpectedly changes typography", name)
-			}
 		}
 	}
 }

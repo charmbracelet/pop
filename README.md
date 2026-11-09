@@ -20,10 +20,6 @@ Launch the TUI
 pop
 ```
 
-The composer and sent summary use the terminal foreground, keeping text readable
-on light and dark backgrounds even when background detection is unavailable or
-inaccurate. Focused labels retain the original blue-purple accent color.
-
 ## Command Line Interface
 
 ```bash

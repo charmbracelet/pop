@@ -21,15 +21,16 @@ type composerStyles struct {
 func newComposerStyles() composerStyles {
 	// Use the terminal's foreground on every background. Some embedded terminals
 	// report the application's theme rather than the visible terminal background.
-	// Preserve the original accent colors without dimming editable text.
+	// Faint labels and faint italic placeholders keep hierarchy on any background
+	// without dimming real values.
 	return composerStyles{
 		activeLabel:     activeLabelStyle,
 		link:            linkStyle.UnsetForeground(),
 		attachmentTitle: attachmentsTitleActiveStyle,
 		activeText:      activeTextStyle.UnsetForeground(),
 		text:            textStyle.UnsetForeground(),
-		label:           labelStyle.UnsetForeground(),
-		placeholder:     placeholderStyle.UnsetForeground(),
+		label:           labelStyle.UnsetForeground().Faint(true),
+		placeholder:     placeholderStyle.UnsetForeground().Faint(true).Italic(true),
 	}
 }
 
