@@ -17,6 +17,7 @@ func (a attachment) FilterValue() string {
 
 type attachmentDelegate struct {
 	focused bool
+	styles  composerStyles
 }
 
 func (d attachmentDelegate) Height() int {
@@ -29,9 +30,9 @@ func (d attachmentDelegate) Spacing() int {
 
 func (d attachmentDelegate) Render(w io.Writer, m list.Model, index int, item list.Item) {
 	path := filepath.Base(item.(attachment).FilterValue())
-	style := textStyle
+	style := d.styles.text
 	if m.Index() == index && d.focused {
-		style = activeTextStyle
+		style = d.styles.activeText
 	}
 
 	if m.Index() == index {

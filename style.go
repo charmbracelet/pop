@@ -21,10 +21,9 @@ var (
 	activeTextStyle = lipgloss.NewStyle().Foreground(whiteColor)
 	textStyle       = lipgloss.NewStyle().Foreground(lightGrayColor)
 
-	activeLabelStyle              = lipgloss.NewStyle().Foreground(accentColor)
-	labelStyle                    = lipgloss.NewStyle().Foreground(grayColor)
-	attachmentsTitleActiveStyle   = lipgloss.NewStyle().Foreground(charmtone.Blush)
-	attachmentsTitleInactiveStyle = lipgloss.NewStyle().Foreground(grayColor)
+	activeLabelStyle            = lipgloss.NewStyle().Foreground(accentColor)
+	labelStyle                  = lipgloss.NewStyle().Foreground(grayColor)
+	attachmentsTitleActiveStyle = lipgloss.NewStyle().Foreground(charmtone.Blush)
 
 	placeholderStyle = lipgloss.NewStyle().Foreground(darkGrayColor)
 
@@ -76,15 +75,20 @@ var (
 // emailSummary returns a summary of the email that was sent. It is used when
 // the user has sent an email successfully.
 func emailSummary(to []string, subject string) string {
+	// CLI sends inherit the terminal foreground without querying its background.
+	return (composerStyles{link: lipgloss.NewStyle().Underline(true)}).emailSummary(to, subject)
+}
+
+func (styles composerStyles) emailSummary(to []string, subject string) string {
 	var s strings.Builder
 	s.WriteString("\n  Email ")
-	s.WriteString(activeTextStyle.Render("\"" + subject + "\""))
+	s.WriteString(styles.activeText.Render("\"" + subject + "\""))
 	s.WriteString(" sent to ")
 	for i, t := range to {
 		if i > 0 {
 			s.WriteString(", ")
 		}
-		s.WriteString(linkStyle.Render(t))
+		s.WriteString(styles.link.Render(t))
 	}
 	s.WriteString("\n\n")
 

@@ -246,7 +246,7 @@ See "pop skill" for a full skill definition for AI agents.`,
 				_, _ = fmt.Fprintln(errWriter, errorStyle.Render(err.Error()))
 				return err
 			}
-			_, _ = fmt.Print(emailSummary(to, subject))
+			_, _ = fmt.Fprint(colorprofile.NewWriter(os.Stdout, os.Environ()), emailSummary(to, subject))
 			return nil
 		}
 
@@ -270,7 +270,8 @@ See "pop skill" for a full skill definition for AI agents.`,
 		}
 		mm := m.(Model)
 		if !mm.abort {
-			fmt.Print(emailSummary(strings.Split(mm.To.Value(), ToSeparator), mm.Subject.Value()))
+			_, _ = fmt.Fprint(colorprofile.NewWriter(os.Stdout, os.Environ()),
+				mm.styles.emailSummary(strings.Split(mm.To.Value(), ToSeparator), mm.Subject.Value()))
 		}
 		return nil
 	},
